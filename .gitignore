@@ -1,0 +1,12 @@
+# Cached Natural Earth source for scripts/build-europe-geo.mjs (25 MB, re-downloadable)
+scripts/.cache/
+
+# Editor and OS noise
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Spreadsheet lock files — Excel creates these next to a CSV you have open
+~$*

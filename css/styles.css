@@ -857,3 +857,158 @@ button {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
+
+/* ===========================================================================
+   Panels, charts and the pieces the JS modules render
+   =========================================================================== */
+
+.link { color: var(--accent); cursor: pointer; }
+.link:hover { text-decoration: underline; }
+
+.btn--wide { width: 100%; margin-top: 10px; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.segmented--sub { margin: 0 0 10px; }
+
+.check__stage { flex: none; display: grid; place-items: center; color: var(--stage-c); }
+.check__stage svg { width: 13px; height: 13px; }
+
+.gate__col { min-width: 0; }
+
+/* Facility detail --------------------------------------------------------- */
+
+.fdetail {
+  padding: 11px 12px;
+  margin-bottom: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.fdetail__head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.fdetail__head h4 { margin: 0; flex: 1; font-size: 14px; font-weight: 650; }
+.fdetail__note { margin: 9px 0 0; font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+.fdetail__foot {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin-top: 10px; padding-top: 9px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+}
+
+.sitegroup { margin-bottom: 14px; }
+.sitegroup__head { margin-bottom: 6px; }
+
+.panel-foot { margin-top: 14px; font-size: 11px; line-height: 1.5; }
+.panel-foot code, .empty code, .faint code {
+  font-family: var(--mono); font-size: 11px;
+  background: var(--surface-3); padding: 1px 5px; border-radius: 4px;
+}
+
+.pop__more { font-size: 12px; color: var(--text-dim); margin-bottom: 8px; }
+
+.idx { margin-top: 8px; }
+
+/* Mini tabs (production stage switcher) ----------------------------------- */
+
+.minitabs { display: flex; gap: 4px; margin-bottom: 12px; }
+.minitabs button {
+  padding: 3px 10px;
+  font-size: 12px;
+  color: var(--text-dim);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  text-transform: capitalize;
+}
+.minitabs button[aria-selected="true"] {
+  color: var(--text);
+  background: var(--surface-3);
+  border-color: var(--border-strong);
+  font-weight: 600;
+}
+
+/* Charts ------------------------------------------------------------------ */
+
+.chart { margin: 0 0 18px; }
+.chart__title { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+.chart__sub { margin: 0 0 10px; font-size: 11px; color: var(--text-faint); }
+
+.donut { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.donut svg { flex: none; }
+.donut__pct { font-size: 26px; font-weight: 650; fill: var(--text); }
+.donut__lbl { font-size: 10px; fill: var(--text-faint); }
+
+.clegend { list-style: none; margin: 0; padding: 0; flex: 1; min-width: 130px; }
+.clegend__row { display: flex; align-items: center; gap: 7px; padding: 2px 0; font-size: 12px; }
+.clegend__sw { flex: none; width: 9px; height: 9px; border-radius: 2px; }
+.clegend__name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.clegend__val { color: var(--text-dim); font-variant-numeric: tabular-nums; }
+.clegend--inline { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 8px; }
+.clegend--inline .clegend__row { flex: none; }
+.clegend--inline .clegend__name { flex: none; }
+
+.linechart { width: 100%; height: auto; }
+.linechart .grid { stroke: var(--border); stroke-width: 1; }
+.linechart .axis { fill: var(--text-faint); font-size: 9px; }
+
+/* Meters ------------------------------------------------------------------ */
+
+.meter { margin-bottom: 11px; }
+.meter__top { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; margin-bottom: 4px; }
+.meter__val { color: var(--text-dim); font-variant-numeric: tabular-nums; }
+.meter__track { height: 7px; background: var(--surface-3); border-radius: 999px; overflow: hidden; }
+.meter__fill { height: 100%; border-radius: 999px; background: var(--accent); }
+.meter--high .meter__fill { background: var(--danger); }
+.meter--high .meter__val { color: var(--danger); }
+
+/* Stage counts ------------------------------------------------------------ */
+
+.stagecounts { display: flex; flex-wrap: wrap; gap: 6px; }
+.stagecount {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 10px;
+  background: color-mix(in srgb, var(--stage-c) 11%, var(--surface-2));
+  border: 1px solid color-mix(in srgb, var(--stage-c) 34%, transparent);
+  border-radius: var(--radius);
+  font-size: 12px;
+}
+.stagecount__icon { display: grid; place-items: center; color: var(--stage-c); }
+.stagecount__n { font-weight: 650; font-variant-numeric: tabular-nums; }
+.stagecount__l { color: var(--text-dim); }
+
+.news { margin-top: 2px; }
+
+/* Capital cities: a quiet orientation layer under the site markers. */
+.city-pin { width: 0 !important; height: 0 !important; }
+.city-dot {
+  position: absolute;
+  left: 0; top: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transform: translate(-3px, -3px);
+  white-space: nowrap;
+  pointer-events: none;
+}
+.city-dot i {
+  flex: none;
+  width: 3px; height: 3px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+}
+.city-dot span {
+  display: none;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.42);
+  letter-spacing: 0.02em;
+}
+.show-city-labels .city-dot span { display: inline; }
+
+/* On a narrow screen the panels are overlay sheets, so the map keeps full width
+   and the toolbar has to clear Leaflet's zoom control. */
+@media (max-width: 900px) {
+  .map-toolbar { top: 12px; right: 12px; }
+  .sidebar { border-right: none; border-radius: 0 var(--radius-lg) var(--radius-lg) 0; }
+  .detail { border-left: none; border-radius: var(--radius-lg) 0 0 var(--radius-lg); }
+  .header { gap: 10px; padding: 0 12px; }
+  .header__title { font-size: 14px; }
+}

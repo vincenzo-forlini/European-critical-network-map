@@ -27,7 +27,7 @@ const SRC_URL =
 // js/map.js). Clipping leaves straight cut lines across Russia and the Arctic,
 // and those artefacts have to sit outside anywhere the user can actually reach,
 // or the basemap visibly turns into a rectangle.
-const BBOX = [-34, 27, 62, 80];
+const BBOX = [-52, 5, 82, 88];
 
 // Included on top of CONTINENT === 'Europe'. Turkey and Cyprus matter for CRM supply
 // (boron, chromite, feldspar) and Natural Earth files them under Asia.

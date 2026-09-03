@@ -10,16 +10,19 @@
 
 import { stageIcon, STAGES, STAGE_LABELS, STAGE_DESCRIPTIONS } from './icons.js';
 
-const EUROPE_VIEW = {
-  center: [56.5, 12],
-  zoom: 4,
-};
+const EUROPE_CENTRE = [56.5, 12];
+
+/** Zoom 4 crops Europe badly on a phone-width viewport, so start further out. */
+function preferredZoom() {
+  if (typeof window === 'undefined') return 4;
+  return window.innerWidth < 700 ? 3 : 4;
+}
 
 // Must stay inside the clip box used by scripts/build-europe-geo.mjs, so the
 // straight edges left by clipping are never reachable.
 const MAX_BOUNDS = [
-  [32, -28],
-  [73, 52],
+  [8, -50],
+  [86, 80],
 ];
 
 let map = null;
@@ -48,9 +51,9 @@ export function initMap({ onCountry } = {}) {
   onCountryClick = onCountry || null;
 
   map = L.map('map', {
-    center: EUROPE_VIEW.center,
-    zoom: EUROPE_VIEW.zoom,
-    minZoom: 3,
+    center: EUROPE_CENTRE,
+    zoom: preferredZoom(),
+    minZoom: 2,
     maxZoom: 9,
     maxBounds: MAX_BOUNDS,
     maxBoundsViscosity: 0.75,
@@ -69,9 +72,29 @@ export function initMap({ onCountry } = {}) {
   markerLayer = L.layerGroup().addTo(map);
 
   map.on('zoomend', applyMarkerSize);
+  map.on('zoomend', updateCityLabels);
+  map.on('resize', applyMinZoom);
+  applyMinZoom();
   applyMarkerSize();
 
   return map;
+}
+
+/**
+ * Zoom floor, per screen size.
+ *
+ * Zooming out far enough reveals the straight edges left by clipping the source
+ * data. Deriving the floor from the viewport sounded right but is dominated by
+ * a phone's tall, narrow aspect, which forced the map in rather than out. A
+ * floor equal to the starting zoom is both simpler and correct: at that zoom the
+ * clip edges sit outside the view on every screen size, and maxBounds stops you
+ * panning to them.
+ */
+function applyMinZoom() {
+  if (!map) return;
+  const floor = preferredZoom();
+  map.setMinZoom(floor);
+  if (map.getZoom() < floor) map.setZoom(floor);
 }
 
 export function getMap() {
@@ -109,22 +132,69 @@ export function renderBasemap(geojson) {
   return basemapLayer;
 }
 
+const BASE_FILL = 0.015;
+const MAX_TINT = 0.1;
+
 /**
- * Tint countries by how many matching sites they hold. Reads at a glance as
- * "who has the lithium" once the filter narrows to a single material.
+ * Tint countries by how many matching sites they hold.
+ *
+ * Only worth doing when the selection is narrow enough for the pattern to mean
+ * something — with everything shown, almost every country has a site and the
+ * whole map turns grey, which destroys the outline cartography for no
+ * information gain. So `enabled` is false unless a single material is selected,
+ * where the question "who has the lithium" actually has a visible answer.
  */
-export function tintCountries(countsByCountry) {
+export function tintCountries(countsByCountry, { enabled = false } = {}) {
   if (!basemapLayer) return;
-  const max = Math.max(0, ...Object.values(countsByCountry || {}));
+  const max = enabled ? Math.max(0, ...Object.values(countsByCountry || {})) : 0;
 
   basemapLayer.eachLayer((layer) => {
     const name = layer.feature?.properties?.name;
     const n = (countsByCountry && countsByCountry[name]) || 0;
     // Square root keeps a country with one site visible next to one with twenty.
-    const tint = max > 0 && n > 0 ? 0.03 + 0.17 * Math.sqrt(n / max) : 0.015;
+    const tint = enabled && max > 0 && n > 0
+      ? BASE_FILL + MAX_TINT * Math.sqrt(n / max)
+      : BASE_FILL;
     layer.options._tint = tint;
     layer.setStyle({ fillOpacity: tint });
   });
+}
+
+/* ------------------------------------------------------------------- cities */
+
+let cityLayer = null;
+
+/**
+ * Capital cities, as a quiet orientation layer. Labels only appear once you
+ * zoom in, so the default view stays as clean as the mockup — the point is to
+ * be able to place a site relative to somewhere you know, not to label Europe.
+ */
+export function renderCities(cities) {
+  if (cityLayer) cityLayer.remove();
+  const capitals = cities.filter((c) => c.is_capital);
+
+  cityLayer = L.layerGroup(
+    capitals.map((c) =>
+      L.marker([c.lat, c.lon], {
+        interactive: false,
+        keyboard: false,
+        icon: L.divIcon({
+          className: 'city-pin',
+          iconSize: null,
+          html: `<div class="city-dot"><i></i><span>${c.name}</span></div>`,
+        }),
+      })
+    )
+  ).addTo(map);
+
+  cityLayer.eachLayer((l) => l.setZIndexOffset(-500));
+  updateCityLabels();
+  return cityLayer;
+}
+
+function updateCityLabels() {
+  if (!map) return;
+  map.getContainer().classList.toggle('show-city-labels', map.getZoom() >= 5);
 }
 
 /* ------------------------------------------------------------------ markers */
@@ -139,10 +209,20 @@ function markerHtml(group) {
   </div>`;
 }
 
+let lastSignature = '';
+
 /**
  * @param {Array} groups  [{ key, city, stage, facilities }]
+ *
+ * Rebuilds only when the set of markers actually changed. Selecting a marker
+ * also triggers a render, and blindly clearing the layer there would destroy
+ * the popup the same click just opened.
  */
 export function renderMarkers(groups, { onSelect } = {}) {
+  const signature = groups.map((g) => `${g.key}:${g.facilities.length}`).join('|');
+  if (signature === lastSignature) return;
+  lastSignature = signature;
+
   markerLayer.clearLayers();
   markersByKey.clear();
 
@@ -209,7 +289,7 @@ export function fitToGroups(groups) {
 export function resetView() {
   if (!map) return;
   map.closePopup();
-  map.setView(EUROPE_VIEW.center, EUROPE_VIEW.zoom, { animate: true });
+  map.setView(EUROPE_CENTRE, Math.max(preferredZoom(), map.getMinZoom()), { animate: true });
 }
 
 export function invalidate() {

@@ -51,18 +51,6 @@ function buildElements(csvText, report) {
       continue;
     }
 
-    const suppliers = splitPairs(r.top_suppliers)
-      .map((p) => ({ country: p.label, share_pct: toNumber(p.value) }))
-      .filter((s) => s.country);
-
-    for (const s of suppliers) {
-      if (s.share_pct === null) {
-        report.warn('elements.csv', r._line,
-          `Supplier "${s.country}" for ${r.name} has no percentage.`,
-          'Expected the form China::68');
-      }
-    }
-
     const el = {
       id,
       name: r.name || id,
@@ -71,14 +59,13 @@ function buildElements(csvText, report) {
       category: r.category || 'other',
       summary: r.summary || '',
       uses: splitList(r.uses),
-      supply: {
-        stage: r.supply_stage || '',
-        reference_year: toNumber(r.reference_year),
-        top_suppliers: suppliers,
+      // EU-level indicators stay here; who produces what lives in production.csv.
+      indicators: {
         eu_import_reliance_pct: toNumber(r.eu_import_reliance_pct),
         eol_recycling_input_rate_pct: toNumber(r.eol_recycling_input_rate_pct),
         substitution_index: toNumber(r.substitution_index),
       },
+      production: [],
       eu_note: r.eu_note || '',
       sources: splitPairs(r.sources)
         .map((p) => ({ label: p.label, url: p.value }))
@@ -94,6 +81,155 @@ function buildElements(csvText, report) {
   }
 
   return { elements, byId, byKey };
+}
+
+/* -------------------------------------------------------------- production */
+
+/**
+ * Long-format production data: one row per material, stage, country and year.
+ *
+ * This shape drives both charts. Filter to a single year and you have the pie;
+ * follow one country across years and you have the line. Adding a year of data
+ * means appending rows, never restructuring the file.
+ */
+function buildProduction(csvText, elementIndex, report) {
+  if (!csvText) return [];
+  const { records } = parseCsv(csvText);
+  const rows = [];
+
+  for (const r of records) {
+    const el = elementIndex.byKey.get(normaliseKey(r.element));
+    if (!el) {
+      report.error('production.csv', r._line, `"${r.element}" is not a known material.`,
+        'It must match an id or name in elements.csv.');
+      continue;
+    }
+    const year = toNumber(r.year);
+    const value = toNumber(r.value);
+    if (year === null) {
+      report.error('production.csv', r._line, `Row for ${el.name} / ${r.country} has no usable year.`);
+      continue;
+    }
+    if (value === null) {
+      report.error('production.csv', r._line,
+        `Row for ${el.name} / ${r.country} (${r.year}) has no usable value.`);
+      continue;
+    }
+    if (!r.country) {
+      report.error('production.csv', r._line, `Row for ${el.name} (${r.year}) has no country.`);
+      continue;
+    }
+
+    const unit = r.unit || 'share_pct';
+    if (unit === 'share_pct' && (value < 0 || value > 100)) {
+      report.warn('production.csv', r._line,
+        `${el.name} / ${r.country} ${r.year}: ${value} is not a valid percentage.`);
+    }
+
+    rows.push({
+      elementId: el.id,
+      stage: r.stage || 'extraction',
+      country: r.country,
+      year,
+      value,
+      unit,
+      source_url: r.source_url || '',
+      note: r.note || '',
+      _line: r._line,
+    });
+  }
+
+  // A year whose shares add up to far more or less than 100 is usually a typo.
+  const groups = new Map();
+  for (const row of rows) {
+    if (row.unit !== 'share_pct') continue;
+    const k = `${row.elementId}|${row.stage}|${row.year}`;
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(row);
+  }
+  for (const [k, list] of groups) {
+    const total = list.reduce((s, r) => s + r.value, 0);
+    if (total > 105) {
+      const [elId, stage, year] = k.split('|');
+      report.warn('production.csv', list[0]._line,
+        `${elId} (${stage}, ${year}) shares total ${Math.round(total)}%, which is over 100.`);
+    }
+  }
+
+  return rows;
+}
+
+/* ------------------------------------------------------- production charts */
+
+/** Distinct stages that have production data for a material. */
+export function productionStages(element) {
+  return [...new Set((element.production || []).map((r) => r.stage))];
+}
+
+/** Distinct years, ascending. */
+export function productionYears(element, stage) {
+  const rows = (element.production || []).filter((r) => !stage || r.stage === stage);
+  return [...new Set(rows.map((r) => r.year))].sort((a, b) => a - b);
+}
+
+/**
+ * Country breakdown for one stage and year.
+ *
+ * Percentages are taken at face value and NOT renormalised. The file usually
+ * lists only the top few producers, so rescaling them to sum to 100 would
+ * quietly promote a 52% producer to 58%. Any shortfall is returned as
+ * `remainder`, which the chart shows as an explicit "rest of world" slice.
+ *
+ * Tonnages, having no such problem, are converted to shares of their own total.
+ *
+ * @returns {{rows: {country, value, share, unit}[], remainder: number, unit: string}}
+ */
+export function productionShares(element, { stage, year } = {}) {
+  let rows = element.production || [];
+  if (stage) rows = rows.filter((r) => r.stage === stage);
+  if (year) rows = rows.filter((r) => r.year === year);
+  if (rows.length === 0) return { rows: [], remainder: 0, unit: '' };
+
+  const unit = rows[0].unit;
+  const total = rows.reduce((s, r) => s + r.value, 0);
+  const isShare = unit === 'share_pct';
+
+  const out = rows
+    .map((r) => ({
+      country: r.country,
+      value: r.value,
+      unit: r.unit,
+      share: isShare ? r.value : total > 0 ? (r.value / total) * 100 : 0,
+    }))
+    .sort((a, b) => b.value - a.value);
+
+  const covered = out.reduce((s, r) => s + r.share, 0);
+  return { rows: out, remainder: Math.max(0, 100 - covered), unit };
+}
+
+/**
+ * One series per country across years, for a line chart.
+ * @returns {{country: string, points: {year: number, value: number}[]}[]}
+ */
+export function productionSeries(element, { stage } = {}) {
+  let rows = element.production || [];
+  if (stage) rows = rows.filter((r) => r.stage === stage);
+
+  const byCountry = new Map();
+  for (const r of rows) {
+    if (!byCountry.has(r.country)) byCountry.set(r.country, []);
+    byCountry.get(r.country).push({ year: r.year, value: r.value });
+  }
+
+  return [...byCountry.entries()]
+    .map(([country, points]) => ({
+      country,
+      points: points.sort((a, b) => a.year - b.year),
+    }))
+    .sort((a, b) => {
+      const last = (s) => s.points[s.points.length - 1]?.value ?? 0;
+      return last(b) - last(a);
+    });
 }
 
 /* ------------------------------------------------------------------ cities */
@@ -338,6 +474,9 @@ export function buildModel(sources) {
   const report = makeReporter();
 
   const elementIndex = buildElements(sources.elementsCsv, report);
+  const production = buildProduction(sources.productionCsv, elementIndex, report);
+  for (const row of production) elementIndex.byId.get(row.elementId)?.production.push(row);
+
   const cityIndex = buildCities(sources.citiesCsv, report);
   const companyIndex = buildCompanies(sources.companiesCsv, report);
   const facilityIndex = buildFacilities(
