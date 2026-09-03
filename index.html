@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>European Critical Raw Materials Map</title>
+<meta name="description" content="Where critical raw materials are mined, processed, refined, smelted and recycled across Europe — filterable by material, country and stage of the supply chain.">
+<link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<div class="loading" id="loading">Loading the dataset…</div>
+
+<div class="app">
+
+  <header class="header">
+    <div class="header__brand">
+      <h1 class="header__title">European Critical Raw Materials</h1>
+      <span class="header__sub">Mining, processing, refining, smelting and recycling</span>
+    </div>
+    <div class="header__spacer"></div>
+    <div class="header__actions">
+      <span class="data-banner" title="Every record carries a source link and a confidence flag. Check before citing.">Seed dataset — verify before citing</span>
+      <button class="btn btn--sm" id="reopen-gate">Change selection</button>
+      <a class="btn btn--sm" href="about.html">About</a>
+    </div>
+  </header>
+
+  <div class="main" id="main">
+
+    <aside class="sidebar" id="sidebar" aria-label="Filters and results">
+      <div class="segmented" role="tablist">
+        <button role="tab" id="tab-filters" aria-selected="true" aria-controls="panel-filters">Filters</button>
+        <button role="tab" id="tab-results" aria-selected="false" aria-controls="panel-results">
+          Results <span class="pill" id="result-count">0</span>
+        </button>
+      </div>
+
+      <div class="search">
+        <input type="search" id="search" placeholder="Search site, company or city…" aria-label="Search sites, companies and cities">
+        <button class="search__clear" id="search-clear" hidden aria-label="Clear search">&times;</button>
+      </div>
+
+      <div class="panel-scroll">
+        <div id="panel-filters" role="tabpanel" aria-labelledby="tab-filters"></div>
+        <div id="panel-results" role="tabpanel" aria-labelledby="tab-results" hidden></div>
+      </div>
+    </aside>
+
+    <div class="map-wrap">
+      <div id="map"></div>
+
+      <div class="map-toolbar">
+        <button class="btn btn--sm" id="toggle-sidebar" aria-label="Show or hide the filter panel">Panel</button>
+        <button class="btn btn--sm" id="reset-view">Reset view</button>
+      </div>
+
+      <div class="legend" id="legend" aria-label="Map legend"></div>
+      <div class="map-note" id="map-note"></div>
+    </div>
+
+    <aside class="detail" id="detail" aria-label="Details" aria-live="polite">
+      <div class="detail__head">
+        <span class="detail__kind" id="detail-kind">Details</span>
+        <div class="header__spacer"></div>
+        <button class="btn btn--ghost btn--sm" id="detail-close" aria-label="Close the details panel">&times;</button>
+      </div>
+      <div class="detail__body" id="detail-body"></div>
+    </aside>
+
+  </div>
+</div>
+
+<!-- Opening gate: pick materials and stages before anything is drawn. -->
+<div class="gate" id="gate" hidden role="dialog" aria-modal="true" aria-labelledby="gate-title">
+  <div class="gate__card">
+    <div class="gate__head">
+      <h1 id="gate-title">What do you want to see?</h1>
+      <p>
+        Choose the critical raw materials and the stages of the supply chain you care about.
+        The map then shows only the sites that match. You can change this at any time.
+      </p>
+    </div>
+
+    <div class="gate__body">
+      <section class="gate__section">
+        <div class="gate__label">
+          <h2>Materials</h2>
+          <span class="gate__hint" id="gate-el-hint"></span>
+        </div>
+        <div class="presets" id="gate-presets"></div>
+        <div class="gate__grid" id="gate-elements"></div>
+      </section>
+
+      <section class="gate__section">
+        <div class="gate__label">
+          <h2>Stages of the chain</h2>
+          <span class="gate__hint">Colour and icon on the map both mean stage.</span>
+        </div>
+        <div class="stage-grid" id="gate-stages"></div>
+      </section>
+    </div>
+
+    <div class="gate__foot">
+      <span class="gate__summary" id="gate-summary"></span>
+      <button class="btn" id="gate-everything">Show everything</button>
+      <button class="btn btn--primary" id="gate-go">Show map</button>
+    </div>
+  </div>
+</div>
+
+<!-- Data problems surface here rather than failing silently. -->
+<div class="errors" id="errors" hidden>
+  <div class="errors__head">
+    <span class="errors__title" id="errors-title">Data problems</span>
+    <button class="btn btn--ghost btn--sm" id="errors-close" aria-label="Dismiss">&times;</button>
+  </div>
+  <div class="errors__body" id="errors-body"></div>
+</div>
+
+<script src="vendor/leaflet/leaflet.js"></script>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

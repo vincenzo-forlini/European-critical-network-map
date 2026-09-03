@@ -1,0 +1,473 @@
+/**
+ * Turns the four CSVs into an indexed model, and reports everything wrong with
+ * them on the way.
+ *
+ * Pure and DOM-free on purpose: the browser imports this to draw the map, and
+ * scripts/validate-data.mjs imports the same functions under Node. The rules
+ * live in one place and cannot drift between the site and the checker.
+ */
+
+import { parseCsv, isTicked, splitList, splitPairs, toNumber, toBool, normaliseKey } from './csv.js';
+
+export const STAGE_VALUES = ['mining', 'processing', 'refining', 'smelting', 'recycling'];
+export const STATUS_VALUES = ['operating', 'construction', 'planned', 'care-and-maintenance', 'closed'];
+export const CONFIDENCE_VALUES = ['high', 'medium', 'low'];
+
+/** Columns in facilities.csv that are NOT material tick columns. */
+export const FACILITY_FIXED_COLUMNS = [
+  'id', 'name', 'company', 'city', 'country', 'stage', 'status',
+  'note', 'source_url', 'confidence', 'last_checked',
+];
+
+/* ------------------------------------------------------------------ errors */
+
+function makeReporter() {
+  const issues = [];
+  const add = (severity) => (file, line, message, hint) => {
+    issues.push({ severity, file, line: line ?? null, message, hint: hint ?? null });
+  };
+  return { issues, error: add('error'), warn: add('warning') };
+}
+
+const cityKeyOf = (name, country) => `${normaliseKey(name)}|${normaliseKey(country)}`;
+
+/* ---------------------------------------------------------------- elements */
+
+function buildElements(csvText, report) {
+  const { records } = parseCsv(csvText);
+  const elements = [];
+  const byId = new Map();
+  const byKey = new Map(); // normalised id AND name, for matching tick columns
+
+  for (const r of records) {
+    const id = normaliseKey(r.id || r.name);
+    if (!id) {
+      report.error('elements.csv', r._line, 'Row has neither an id nor a name.');
+      continue;
+    }
+    if (byId.has(id)) {
+      report.error('elements.csv', r._line, `Duplicate material id "${id}".`,
+        `Already defined on line ${byId.get(id)._line}.`);
+      continue;
+    }
+
+    const suppliers = splitPairs(r.top_suppliers)
+      .map((p) => ({ country: p.label, share_pct: toNumber(p.value) }))
+      .filter((s) => s.country);
+
+    for (const s of suppliers) {
+      if (s.share_pct === null) {
+        report.warn('elements.csv', r._line,
+          `Supplier "${s.country}" for ${r.name} has no percentage.`,
+          'Expected the form China::68');
+      }
+    }
+
+    const el = {
+      id,
+      name: r.name || id,
+      symbol: r.symbol || '',
+      strategic: toBool(r.strategic),
+      category: r.category || 'other',
+      summary: r.summary || '',
+      uses: splitList(r.uses),
+      supply: {
+        stage: r.supply_stage || '',
+        reference_year: toNumber(r.reference_year),
+        top_suppliers: suppliers,
+        eu_import_reliance_pct: toNumber(r.eu_import_reliance_pct),
+        eol_recycling_input_rate_pct: toNumber(r.eol_recycling_input_rate_pct),
+        substitution_index: toNumber(r.substitution_index),
+      },
+      eu_note: r.eu_note || '',
+      sources: splitPairs(r.sources)
+        .map((p) => ({ label: p.label, url: p.value }))
+        .filter((s) => s.url),
+      _line: r._line,
+    };
+
+    elements.push(el);
+    byId.set(id, el);
+    byKey.set(id, el);
+    byKey.set(normaliseKey(el.name), el);
+    if (el.symbol) byKey.set(normaliseKey(el.symbol), el);
+  }
+
+  return { elements, byId, byKey };
+}
+
+/* ------------------------------------------------------------------ cities */
+
+function buildCities(csvText, report) {
+  const { records } = parseCsv(csvText);
+  const cities = [];
+  const byKey = new Map();
+
+  for (const r of records) {
+    const name = r.city || r.name;
+    const country = r.country;
+    if (!name || !country) {
+      report.error('cities.csv', r._line, 'A city row needs both a city and a country.');
+      continue;
+    }
+
+    const lat = toNumber(r.lat);
+    const lon = toNumber(r.lon);
+    if (lat === null || lon === null) {
+      report.error('cities.csv', r._line, `${name} has no usable coordinates.`,
+        `Got lat="${r.lat}" lon="${r.lon}".`);
+      continue;
+    }
+    // Catches swapped lat/lon, which otherwise silently drops a pin in the sea.
+    if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+      report.error('cities.csv', r._line, `${name} has out-of-range coordinates (${lat}, ${lon}).`);
+      continue;
+    }
+    if (lat < 27 || lat > 82 || lon < -35 || lon > 65) {
+      report.warn('cities.csv', r._line,
+        `${name} (${lat}, ${lon}) falls outside the European map area and will not be visible.`);
+    }
+
+    const key = cityKeyOf(name, country);
+    if (byKey.has(key)) {
+      report.error('cities.csv', r._line, `Duplicate city "${name}, ${country}".`,
+        `Already defined on line ${byKey.get(key)._line}.`);
+      continue;
+    }
+
+    const city = {
+      key,
+      name,
+      country,
+      country_code: (r.country_code || '').toUpperCase(),
+      lat,
+      lon,
+      is_capital: toBool(r.is_capital),
+      _line: r._line,
+    };
+    cities.push(city);
+    byKey.set(key, city);
+  }
+
+  return { cities, byKey };
+}
+
+/* --------------------------------------------------------------- companies */
+
+function buildCompanies(csvText, report) {
+  const { records } = parseCsv(csvText);
+  const companies = [];
+  const byKey = new Map();
+
+  for (const r of records) {
+    const name = r.company || r.name;
+    if (!name) {
+      report.error('companies.csv', r._line, 'Row has no company name.');
+      continue;
+    }
+    const key = normaliseKey(name);
+    if (byKey.has(key)) {
+      report.error('companies.csv', r._line, `Duplicate company "${name}".`,
+        `Already defined on line ${byKey.get(key)._line}.`);
+      continue;
+    }
+    if (r.website && !/^https?:\/\//i.test(r.website)) {
+      report.warn('companies.csv', r._line, `${name} has a website that is not a URL: "${r.website}".`);
+    }
+
+    const company = {
+      key,
+      name,
+      hq_country: r.hq_country || '',
+      website: r.website || '',
+      type: r.type || '',
+      news_query: r.news_query || '',
+      facilities: [],
+      _line: r._line,
+    };
+    companies.push(company);
+    byKey.set(key, company);
+  }
+
+  return { companies, byKey };
+}
+
+/* -------------------------------------------------------------- facilities */
+
+function buildFacilities(csvText, { elementIndex, cityIndex, companyIndex }, report) {
+  const { headers, records } = parseCsv(csvText);
+
+  // Every header that is not a fixed column is treated as a material tick column.
+  const fixed = new Set(FACILITY_FIXED_COLUMNS);
+  const tickColumns = [];
+  for (const h of headers) {
+    if (!h || fixed.has(h)) continue;
+    const el = elementIndex.byKey.get(normaliseKey(h));
+    if (!el) {
+      report.error('facilities.csv', 1, `Column "${h}" is not a known material.`,
+        'Add it to elements.csv, or fix the spelling. Column headings are matched loosely, so "Light Rare Earths" and "light-rare-earths" both work.');
+      continue;
+    }
+    tickColumns.push({ header: h, elementId: el.id });
+  }
+
+  for (const c of FACILITY_FIXED_COLUMNS) {
+    if (!headers.includes(c) && c !== 'note' && c !== 'country') {
+      report.error('facilities.csv', 1, `Missing required column "${c}".`);
+    }
+  }
+
+  const facilities = [];
+  const byId = new Map();
+
+  for (const r of records) {
+    const line = r._line;
+    const id = normaliseKey(r.id);
+    if (!id) {
+      report.error('facilities.csv', line, `Row has no id (name: "${r.name || '?'}").`);
+      continue;
+    }
+    if (byId.has(id)) {
+      report.error('facilities.csv', line, `Duplicate site id "${id}".`,
+        `Already used on line ${byId.get(id)._line}.`);
+      continue;
+    }
+
+    const stage = normaliseKey(r.stage);
+    if (!STAGE_VALUES.includes(stage)) {
+      report.error('facilities.csv', line, `"${r.stage}" is not a valid stage for ${r.name || id}.`,
+        `Use one of: ${STAGE_VALUES.join(', ')}.`);
+      continue;
+    }
+
+    const status = normaliseKey(r.status) || 'operating';
+    if (!STATUS_VALUES.includes(status)) {
+      report.error('facilities.csv', line, `"${r.status}" is not a valid status for ${r.name || id}.`,
+        `Use one of: ${STATUS_VALUES.join(', ')}.`);
+      continue;
+    }
+
+    const confidence = normaliseKey(r.confidence) || 'low';
+    if (!CONFIDENCE_VALUES.includes(confidence)) {
+      report.error('facilities.csv', line, `"${r.confidence}" is not a valid confidence for ${r.name || id}.`,
+        `Use one of: ${CONFIDENCE_VALUES.join(', ')}.`);
+      continue;
+    }
+
+    const city = cityIndex.byKey.get(cityKeyOf(r.city, r.country));
+    if (!city) {
+      report.error('facilities.csv', line, `No coordinates for "${r.city}, ${r.country}".`,
+        'Add a row to cities.csv with its latitude and longitude.');
+      continue;
+    }
+
+    let company = companyIndex.byKey.get(normaliseKey(r.company));
+    if (!company && r.company) {
+      // Not fatal: draw the site, but say the company is undescribed.
+      report.warn('facilities.csv', line, `Company "${r.company}" is not listed in companies.csv.`,
+        'The site still appears; add the company to give it a website and news.');
+      company = {
+        key: normaliseKey(r.company),
+        name: r.company,
+        hq_country: '',
+        website: '',
+        type: '',
+        news_query: '',
+        facilities: [],
+        _synthesised: true,
+      };
+      companyIndex.byKey.set(company.key, company);
+      companyIndex.companies.push(company);
+    }
+    if (!r.company) {
+      report.error('facilities.csv', line, `${r.name || id} has no company.`);
+      continue;
+    }
+
+    const elementIds = tickColumns.filter((t) => isTicked(r[t.header])).map((t) => t.elementId);
+    if (elementIds.length === 0) {
+      report.error('facilities.csv', line, `${r.name || id} has no materials ticked.`,
+        'Tick at least one material column with an x.');
+      continue;
+    }
+
+    if (!r.source_url) {
+      report.warn('facilities.csv', line, `${r.name || id} has no source_url.`);
+    } else if (!/^https?:\/\//i.test(r.source_url)) {
+      report.warn('facilities.csv', line, `${r.name || id} has a source that is not a URL: "${r.source_url}".`);
+    }
+
+    const facility = {
+      id,
+      name: r.name || id,
+      company,
+      companyKey: company.key,
+      city,
+      cityKey: city.key,
+      country: city.country, // the city is authoritative
+      stage,
+      status,
+      note: r.note || '',
+      source_url: r.source_url || '',
+      confidence,
+      last_checked: r.last_checked || '',
+      elements: [...new Set(elementIds)],
+      _line: line,
+    };
+
+    // A disagreement here usually means a typo in one column or the other.
+    if (r.country && normaliseKey(r.country) !== normaliseKey(city.country)) {
+      report.warn('facilities.csv', line,
+        `${facility.name} says "${r.country}" but ${city.name} is in ${city.country}.`);
+    }
+
+    facilities.push(facility);
+    byId.set(id, facility);
+    company.facilities.push(facility);
+  }
+
+  return { facilities, byId, tickColumns };
+}
+
+/* ------------------------------------------------------------------- model */
+
+/**
+ * @param {{elementsCsv: string, citiesCsv: string, companiesCsv: string, facilitiesCsv: string}} sources
+ */
+export function buildModel(sources) {
+  const report = makeReporter();
+
+  const elementIndex = buildElements(sources.elementsCsv, report);
+  const cityIndex = buildCities(sources.citiesCsv, report);
+  const companyIndex = buildCompanies(sources.companiesCsv, report);
+  const facilityIndex = buildFacilities(
+    sources.facilitiesCsv,
+    { elementIndex, cityIndex, companyIndex },
+    report
+  );
+
+  // Cross-references that only make sense once everything is loaded.
+  const usedElements = new Set(facilityIndex.facilities.flatMap((f) => f.elements));
+  const usedCities = new Set(facilityIndex.facilities.map((f) => f.cityKey));
+
+  for (const city of cityIndex.cities) {
+    if (!usedCities.has(city.key) && !city.is_capital) {
+      report.warn('cities.csv', city._line,
+        `${city.name} has no sites and is not flagged as a capital.`,
+        'Harmless, but it is dead weight in the file.');
+    }
+  }
+
+  const elements = elementIndex.elements.map((el) => ({
+    ...el,
+    facility_count: facilityIndex.facilities.filter((f) => f.elements.includes(el.id)).length,
+  }));
+
+  return {
+    elements,
+    elementById: new Map(elements.map((e) => [e.id, e])),
+    cities: cityIndex.cities,
+    cityByKey: cityIndex.byKey,
+    companies: companyIndex.companies.filter((c) => c.facilities.length > 0),
+    companyByKey: companyIndex.byKey,
+    facilities: facilityIndex.facilities,
+    facilityById: facilityIndex.byId,
+    issues: report.issues,
+    errors: report.issues.filter((i) => i.severity === 'error'),
+    warnings: report.issues.filter((i) => i.severity === 'warning'),
+    stats: {
+      facilities: facilityIndex.facilities.length,
+      companies: companyIndex.companies.filter((c) => c.facilities.length > 0).length,
+      cities: usedCities.size,
+      elements: elements.length,
+      elementsWithSites: usedElements.size,
+      countries: new Set(facilityIndex.facilities.map((f) => f.country)).size,
+    },
+  };
+}
+
+/* --------------------------------------------------------------- filtering */
+
+/** Facilities matching the current selection. All criteria are ANDed. */
+export function filterFacilities(model, filters) {
+  const { elements, stages, countries, statuses, query } = filters;
+  const elementSet = elements?.size ? elements : null;
+  const stageSet = stages?.size ? stages : null;
+  const countrySet = countries?.size ? countries : null;
+  const statusSet = statuses?.size ? statuses : null;
+  const q = (query || '').trim().toLowerCase();
+
+  return model.facilities.filter((f) => {
+    if (stageSet && !stageSet.has(f.stage)) return false;
+    if (countrySet && !countrySet.has(f.country)) return false;
+    if (statusSet && !statusSet.has(f.status)) return false;
+    if (elementSet && !f.elements.some((e) => elementSet.has(e))) return false;
+    if (q) {
+      const hay = `${f.name} ${f.company.name} ${f.city.name} ${f.country}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+/** One marker per city and stage — see the note at the top of js/map.js. */
+export function groupForMap(facilities) {
+  const groups = new Map();
+  for (const f of facilities) {
+    const key = `${f.cityKey}::${f.stage}`;
+    let g = groups.get(key);
+    if (!g) {
+      g = { key, city: f.city, stage: f.stage, facilities: [] };
+      groups.set(key, g);
+    }
+    g.facilities.push(f);
+  }
+  return [...groups.values()];
+}
+
+/** Facilities grouped by operator, for the Companies tab. */
+export function groupByCompany(facilities) {
+  const map = new Map();
+  for (const f of facilities) {
+    let g = map.get(f.companyKey);
+    if (!g) {
+      g = { company: f.company, facilities: [], countries: new Set(), stages: new Set(), elements: new Set() };
+      map.set(f.companyKey, g);
+    }
+    g.facilities.push(f);
+    g.countries.add(f.country);
+    g.stages.add(f.stage);
+    for (const e of f.elements) g.elements.add(e);
+  }
+  return [...map.values()].sort(
+    (a, b) => b.facilities.length - a.facilities.length || a.company.name.localeCompare(b.company.name)
+  );
+}
+
+/** How many facilities each value of a facet would match. Drives the counts
+ *  beside every checkbox. Computed with that facet's own filter removed, so a
+ *  count never reads zero just because the option is currently unselected. */
+export function facetCounts(model, filters) {
+  const count = (facet, valuesOf) => {
+    const relaxed = { ...filters, [facet]: null };
+    const rows = filterFacilities(model, relaxed);
+    const out = new Map();
+    for (const f of rows) {
+      for (const v of valuesOf(f)) out.set(v, (out.get(v) || 0) + 1);
+    }
+    return out;
+  };
+
+  return {
+    elements: count('elements', (f) => f.elements),
+    stages: count('stages', (f) => [f.stage]),
+    countries: count('countries', (f) => [f.country]),
+    statuses: count('statuses', (f) => [f.status]),
+  };
+}
+
+export function countriesByFacilityCount(facilities) {
+  const out = {};
+  for (const f of facilities) out[f.country] = (out[f.country] || 0) + 1;
+  return out;
+}
