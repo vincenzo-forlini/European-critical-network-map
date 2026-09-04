@@ -1,24 +1,22 @@
 /**
- * Filter state, mirrored into the URL hash.
+ * Filter state.
  *
- * The hash is what makes a filtered view shareable, and it is also what lets a
- * shared link skip the opening gate: if someone arrives with a selection
- * already in the URL, they have effectively answered the gate's question.
+ * Deliberately not mirrored into the URL: the address bar stays clean. The
+ * trade is that a filtered view cannot be shared or bookmarked, and a reload
+ * returns to the default view with everything selected.
  */
 
 const listeners = new Set();
 
 /**
- * Every possible value of each facet, set once at boot.
- *
- * Needed for two things: starting with everything selected, and keeping the URL
- * short. A facet that is fully selected is the default, so it is left out of the
- * hash rather than spelling out all 34 material ids.
+ * Every possible value of each facet, set once at boot. Starting state is
+ * "everything selected", so these are also the defaults.
  */
 const totals = { elements: [], stages: [], countries: [], statuses: [] };
 
 export function setTotals(next) {
   Object.assign(totals, next);
+  for (const facet of Object.keys(totals)) state[facet] = new Set(totals[facet]);
 }
 
 export function totalFor(facet) {
@@ -36,7 +34,6 @@ export const state = {
   // { kind: 'city'|'company'|'element', id } or null
   detail: null,
   selectedKey: null,
-  gateSeen: false,
 };
 
 export function subscribe(fn) {
@@ -55,8 +52,7 @@ let timer = null;
  * tabs, so a state change made while the page is in the background would sit
  * unrendered instead of being applied.
  */
-export function emit({ syncHash = true } = {}) {
-  if (syncHash) writeHash();
+export function emit() {
   if (frame !== null || timer !== null) return;
 
   const run = () => {
@@ -115,17 +111,17 @@ export function setQuery(q) {
 
 export function setDetail(detail) {
   state.detail = detail;
-  emit({ syncHash: false });
+  emit();
 }
 
 export function setSelectedKey(key) {
   state.selectedKey = key;
-  emit({ syncHash: false });
+  emit();
 }
 
 export function setResultsTab(tab) {
   state.resultsTab = tab;
-  emit({ syncHash: false });
+  emit();
 }
 
 /** True when the view has been narrowed from the default "everything" state. */
@@ -137,80 +133,4 @@ export function hasAnyFilter() {
     !isFacetFull('statuses') ||
     state.query !== ''
   );
-}
-
-/* ------------------------------------------------------------------- hash */
-
-const FACETS = [
-  ['elements', 'm'], // materials
-  ['stages', 's'],
-  ['countries', 'c'],
-  ['statuses', 'st'],
-];
-
-let writing = false;
-
-function writeHash() {
-  const parts = [];
-  for (const [facet, key] of FACETS) {
-    // A fully selected facet is the default. Leaving it out keeps the URL short
-    // instead of listing all 34 material ids on every page load.
-    if (isFacetFull(facet)) continue;
-    parts.push(`${key}=${[...state[facet]].map(encodeURIComponent).join(',') || '-'}`);
-  }
-  if (state.query) parts.push(`q=${encodeURIComponent(state.query)}`);
-
-  const hash = parts.length ? `#${parts.join('&')}` : '';
-  if (hash === window.location.hash) return;
-
-  writing = true;
-  // replaceState rather than pushState: filtering is not navigation, and every
-  // checkbox click would otherwise become a back-button step.
-  history.replaceState(null, '', hash || window.location.pathname + window.location.search);
-  writing = false;
-}
-
-/**
- * Apply the URL hash on top of the default "everything selected" state.
- *
- * A facet absent from the hash means it was not narrowed, so it stays full.
- * `-` means the facet was explicitly emptied.
- */
-export function readHash() {
-  for (const facet of Object.keys(totals)) state[facet] = new Set(totals[facet]);
-  state.query = '';
-
-  const raw = window.location.hash.replace(/^#/, '');
-  if (!raw) return false;
-
-  let found = false;
-  for (const part of raw.split('&')) {
-    const eq = part.indexOf('=');
-    if (eq === -1) continue;
-    const key = part.slice(0, eq);
-    const value = part.slice(eq + 1);
-    if (!value) continue;
-
-    if (key === 'q') {
-      state.query = decodeURIComponent(value);
-      found = true;
-      continue;
-    }
-    const facet = FACETS.find(([, k]) => k === key)?.[0];
-    if (!facet) continue;
-    state[facet] =
-      value === '-' ? new Set() : new Set(value.split(',').map(decodeURIComponent).filter(Boolean));
-    found = true;
-  }
-  return found;
-}
-
-export function watchHash(onChange) {
-  window.addEventListener('hashchange', () => {
-    if (writing) return;
-    readHash();
-    // Pass the state, like every other subscriber receives it. Calling this
-    // bare left the renderer with an undefined argument and threw.
-    onChange(state);
-  });
 }

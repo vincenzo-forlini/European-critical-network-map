@@ -2,9 +2,9 @@
  * Boot and wiring.
  *
  * Load order: CSVs -> model -> map -> render loop. The map opens showing the
- * whole dataset; a URL hash can narrow it. Every UI click is delegated from a
- * small number of listeners using data-act attributes, so nothing has to hold
- * references to everything else.
+ * whole dataset. Every UI click is delegated from a small number of listeners
+ * using data-act attributes, so nothing has to hold references to everything
+ * else.
  */
 
 import {
@@ -86,13 +86,10 @@ async function boot() {
 
   wireChrome();
   S.subscribe(render);
-  S.watchHash(render);
 
   $('loading').hidden = true;
 
   applyResponsiveSidebar();
-  // A link may carry a narrower selection; otherwise this fills in "everything".
-  S.readHash();
   render(S.state);
 }
 
