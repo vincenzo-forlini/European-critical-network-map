@@ -200,7 +200,11 @@ publisher, date and link are stored, never article text.
 
 The **Explore the CRMs** button opens the periodic table with every listed material
 highlighted — gold for the 17 strategic ones, blue for the rest — and the number of European
-sites in the corner of each cell. Clicking an element opens its factsheet in the side panel.
+sites in the corner of each cell.
+
+**Opening a factsheet filters the map to that material** and collapses the filter panel, so the
+map and the panel are always describing the same thing. Widen it again with *Select all* under
+Material. A material with no European sites leaves the map empty, and the factsheet says so.
 
 The mapping from the EU list to the table is not one-to-one, and the view says so rather than
 tidying it away:

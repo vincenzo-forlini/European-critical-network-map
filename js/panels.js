@@ -261,7 +261,7 @@ export function elementPanel(model, elementId, { productionStage } = {}) {
     : `${stageTabs}
        ${donutChart(shares, {
          title: `Share of world ${activeStage}`,
-         subtitle: `${latestYear} &middot; indicative figures, verify against the sources below`,
+         subtitle: `${latestYear} · indicative figures, verify against the sources below`,
        })}
        ${lineChart(series, { title: 'Over time', unit: shares.unit })}
        ${years.length < 2
@@ -302,7 +302,10 @@ export function elementPanel(model, elementId, { productionStage } = {}) {
 
     <h3>In Europe</h3>
     ${sites.length === 0
-      ? `<p class="faint">No European site in this dataset handles ${esc(el.name)}.</p>`
+      ? `<p class="faint">
+           No European site in this dataset handles ${esc(el.name)}, so the map is empty while
+           this factsheet is open.
+         </p>`
       : `<div class="stagecounts">
           ${stageCounts
             .map(
@@ -314,9 +317,10 @@ export function elementPanel(model, elementId, { productionStage } = {}) {
             )
             .join('')}
         </div>
-        <button class="btn btn--primary btn--wide" data-act="filter-element" data-id="${esc(el.id)}">
-          Show ${plural(sites.length, 'site')} on the map
-        </button>`}
+        <p class="faint idx">
+          The map is filtered to ${plural(sites.length, 'site')} handling ${esc(el.name)}.
+          Widen it again with <em>Select all</em> under Material.
+        </p>`}
 
     <h3>Sources</h3>
     <div class="srcs">

@@ -311,21 +311,25 @@ function onDelegatedClick(e) {
       S.setDetail({ kind: 'company', id });
       break;
 
-    case 'open-element':
+    case 'open-element': {
       productionStage = null;
       closePeriodic(); // harmless when it is not open
+      // Opening a factsheet also narrows the map to that material, so the panel
+      // and the map are always talking about the same thing. Carbon carries two
+      // materials, so this may be a comma-separated list.
+      const ids = String(id).split(',').filter(Boolean);
+      S.setMany('elements', ids);
+      // The factsheet takes the right-hand column, so give the map the left one
+      // back. The filter panel has just been used and is not needed to read this.
+      setSidebarOpen(false);
       S.setDetail({ kind: 'element', id });
       break;
+    }
 
 
     case 'prod-stage':
       productionStage = id;
       renderDetail(S.state);
-      break;
-
-    case 'filter-element':
-      S.setMany('elements', [id]);
-      currentTab = 'results';
       break;
 
     case 'select-all':
