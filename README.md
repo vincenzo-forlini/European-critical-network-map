@@ -7,6 +7,9 @@ Filter by material, by country and by stage of the supply chain. Click a site to
 is and who runs it. Open a material to read what it is, what it is used for, and which
 countries control its supply.
 
+**Explore the CRMs** opens a periodic table with the critical and strategic materials
+highlighted; click any element for its factsheet.
+
 ![Materials](https://img.shields.io/badge/materials-34%20EU%20CRMs-6aa6ff)
 ![Sites](https://img.shields.io/badge/sites-137-a4ea86)
 ![Strategic projects](https://img.shields.io/badge/EU%20strategic%20projects-46%2F47-ffd479)
@@ -193,6 +196,29 @@ publisher, date and link are stored, never article text.
 
 ---
 
+## The periodic table view
+
+The **Explore the CRMs** button opens the periodic table with every listed material
+highlighted — gold for the 17 strategic ones, blue for the rest — and the number of European
+sites in the corner of each cell. Clicking an element opens its factsheet in the side panel.
+
+The mapping from the EU list to the table is not one-to-one, and the view says so rather than
+tidying it away:
+
+- **Groups.** Platinum group metals is six elements; the rare earths are seven light and nine
+  heavy. Every member is highlighted, and each opens the one group factsheet — clicking iridium
+  or platinum both give you Platinum group metals.
+- **Minerals.** Baryte, fluorspar, phosphate rock and feldspar are not elements. They sit on
+  their own row beneath the table. Putting baryte on barium would claim the listed material is
+  the metal, which it is not.
+- **Carbon carries two.** Natural graphite and coking coal are separate entries on the EU list
+  and the same element. Clicking carbon opens both factsheets, one after the other.
+
+One number to watch: the Act designates **17** strategic raw materials, but this dataset has
+**18** strategic rows. It counts rare earths for magnets as a single entry, while the dataset
+keeps light and heavy rare earths apart and both contain magnet elements. The view states this
+where the count appears, rather than quietly showing 18 and letting it look like an error.
+
 ## How it is built
 
 No framework, no bundler, no dependencies. ES modules loaded straight by the browser.
@@ -205,6 +231,7 @@ js/data.js            CSV -> indexed model + integrity checks         [shared wi
 js/map.js             Leaflet, GeoJSON basemap, stage markers
 js/charts.js          donut and line charts, hand-rolled SVG
 js/panels.js          city, company and material panels
+js/periodic.js        periodic table view and its mapping to the EU list
 js/filters.js  js/results.js  js/state.js  js/ui.js  js/icons.js  js/app.js
 scripts/              serve, validate, fetch news, rebuild the basemap
 vendor/leaflet/       vendored so the map works offline
