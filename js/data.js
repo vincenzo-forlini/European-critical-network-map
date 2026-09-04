@@ -9,7 +9,9 @@
 
 import { parseCsv, isTicked, splitList, splitPairs, toNumber, toBool, normaliseKey } from './csv.js';
 
-export const STAGE_VALUES = ['mining', 'processing', 'refining', 'smelting', 'recycling', 'recovery'];
+export const STAGE_VALUES = [
+  'mining', 'processing', 'refining', 'smelting', 'recycling', 'recovery', 'substitution',
+];
 export const STATUS_VALUES = ['operating', 'construction', 'planned', 'care-and-maintenance', 'closed'];
 export const CONFIDENCE_VALUES = ['high', 'medium', 'low'];
 
@@ -25,10 +27,23 @@ export const CONFIDENCE_VALUES = ['high', 'medium', 'low'];
  */
 export const MATURITY_VALUES = ['incumbent', 'scale-up', 'startup'];
 
+/**
+ * Whether a site is part of a Strategic Project designated under the Critical
+ * Raw Materials Act. These are the most authoritative rows in the dataset: the
+ * project name, promoter, country, material and value-chain stage all come from
+ * the Commission's own annex rather than from compilation.
+ */
+export const CRMA_VALUES = ['strategic', 'not-listed'];
+
+/** The Act's own four value-chain categories, kept verbatim. They are coarser
+ *  than this project's stages, so both are recorded rather than one inferred. */
+export const CRMA_STAGES = ['extraction', 'processing', 'recycling', 'substitution'];
+
 /** Columns in facilities.csv that are NOT material tick columns. */
 export const FACILITY_FIXED_COLUMNS = [
   'id', 'name', 'company', 'city', 'country', 'stage', 'status',
   'note', 'source_url', 'confidence', 'last_checked',
+  'crma_project', 'crma_stage',
 ];
 
 /* ------------------------------------------------------------------ errors */
@@ -454,11 +469,30 @@ function buildFacilities(csvText, { elementIndex, cityIndex, companyIndex }, rep
       report.warn('facilities.csv', line, `${r.name || id} has a source that is not a URL: "${r.source_url}".`);
     }
 
+    // Strategic Project designation under the CRM Act. The promoter stays the
+    // headline entity — the project name is a label on top of it, not a
+    // replacement for it.
+    const crmaProject = (r.crma_project || '').trim();
+    const crmaStage = normaliseKey(r.crma_stage);
+    if (crmaStage && !CRMA_STAGES.includes(crmaStage)) {
+      report.error('facilities.csv', line,
+        `"${r.crma_stage}" is not a CRM Act value-chain category for ${r.name || id}.`,
+        `Use one of: ${CRMA_STAGES.join(', ')}.`);
+      continue;
+    }
+    if (crmaStage && !crmaProject) {
+      report.warn('facilities.csv', line,
+        `${r.name || id} has a crma_stage but no crma_project name.`);
+    }
+
     const facility = {
       id,
       name: r.name || id,
       company,
       companyKey: company.key,
+      crmaProject,
+      crmaStage,
+      crma: crmaProject ? 'strategic' : 'not-listed',
       city,
       cityKey: city.key,
       country: city.country, // the city is authoritative
@@ -556,12 +590,13 @@ export function buildModel(sources) {
  * is how facetCounts relaxes one dimension at a time.
  */
 export function filterFacilities(model, filters) {
-  const { elements, stages, countries, statuses, maturities, query } = filters;
+  const { elements, stages, countries, statuses, maturities, crma, query } = filters;
   const elementSet = elements instanceof Set ? elements : null;
   const stageSet = stages instanceof Set ? stages : null;
   const countrySet = countries instanceof Set ? countries : null;
   const statusSet = statuses instanceof Set ? statuses : null;
   const maturitySet = maturities instanceof Set ? maturities : null;
+  const crmaSet = crma instanceof Set ? crma : null;
   const q = (query || '').trim().toLowerCase();
 
   return model.facilities.filter((f) => {
@@ -569,9 +604,10 @@ export function filterFacilities(model, filters) {
     if (countrySet && !countrySet.has(f.country)) return false;
     if (statusSet && !statusSet.has(f.status)) return false;
     if (maturitySet && !maturitySet.has(f.company.maturity)) return false;
+    if (crmaSet && !crmaSet.has(f.crma)) return false;
     if (elementSet && !f.elements.some((e) => elementSet.has(e))) return false;
     if (q) {
-      const hay = `${f.name} ${f.company.name} ${f.city.name} ${f.country}`.toLowerCase();
+      const hay = `${f.name} ${f.company.name} ${f.city.name} ${f.country} ${f.crmaProject}`.toLowerCase();
       if (!hay.includes(q)) return false;
     }
     return true;
@@ -632,6 +668,7 @@ export function facetCounts(model, filters) {
     countries: count('countries', (f) => [f.country]),
     statuses: count('statuses', (f) => [f.status]),
     maturities: count('maturities', (f) => [f.company.maturity]),
+    crma: count('crma', (f) => [f.crma]),
   };
 }
 

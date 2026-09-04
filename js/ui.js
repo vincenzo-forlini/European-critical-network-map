@@ -80,3 +80,18 @@ export function maturityChip(maturity) {
   const label = maturity === 'startup' ? 'Start-up' : 'Scale-up';
   return `<span class="chip chip--${esc(maturity)}">${label}</span>`;
 }
+
+/**
+ * Marks a site as part of a Strategic Project under the Critical Raw Materials
+ * Act. The promoting company stays the headline; this rides alongside it as a
+ * label, because who is building the thing matters more than the project's
+ * codename.
+ */
+export function crmaChip(facility, { compact = false } = {}) {
+  if (!facility.crmaProject) return '';
+  const title = `EU Strategic Project: ${facility.crmaProject}` +
+    (facility.crmaStage ? ` (${facility.crmaStage})` : '');
+  return `<span class="chip chip--crma" title="${esc(title)}">&#9733; ${
+    compact ? 'Project' : 'EU Strategic Project'
+  }</span>`;
+}

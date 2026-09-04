@@ -15,11 +15,11 @@ import {
 export function renderResults(container, model, state, facilities) {
   if (facilities.length === 0) {
     // Name the category that is actually empty, rather than guessing at the cause.
-    const emptied = ['elements', 'stages', 'countries', 'statuses', 'maturities'].filter(
+    const emptied = ['elements', 'stages', 'countries', 'statuses', 'maturities', 'crma'].filter(
       (f) => state[f].size === 0
     );
     const labels = { elements: 'material', stages: 'stage', countries: 'country',
-                     statuses: 'status', maturities: 'company type' };
+                     statuses: 'status', maturities: 'company type', crma: 'project listing' };
     container.innerHTML = empty(
       'Nothing matches',
       emptied.length

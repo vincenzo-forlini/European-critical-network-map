@@ -7,7 +7,7 @@
  */
 
 import { STAGES, STAGE_LABELS, STAGE_DESCRIPTIONS, stageIcon } from './icons.js';
-import { STATUS_VALUES, MATURITY_VALUES } from './data.js';
+import { STATUS_VALUES, MATURITY_VALUES, CRMA_VALUES } from './data.js';
 import { esc, checkRow } from './ui.js';
 
 /** Plain-language labels for the maturity values. */
@@ -17,10 +17,16 @@ export const MATURITY_LABELS = {
   startup: 'Start-up or spin-off',
 };
 
+const CRMA_LABELS = {
+  strategic: 'EU Strategic Project',
+  'not-listed': 'Not on the list',
+};
+
 const OPEN = new Map([
   ['elements', true],
   ['stages', true],
   ['maturities', true],
+  ['crma', true],
   ['countries', false],
   ['statuses', false],
 ]);
@@ -116,6 +122,22 @@ export function renderFilters(container, model, state, counts) {
           <span class="check__label">${esc(STAGE_LABELS[s])}</span>
           <span class="check__n">${counts.stages.get(s) || 0}</span>
         </label>`
+      ).join(''),
+    })}
+
+    ${group({
+      facet: 'crma',
+      title: 'EU Strategic Projects',
+      selectedCount: state.crma.size,
+      total: CRMA_VALUES.length,
+      body: CRMA_VALUES.map((v) =>
+        checkRow({
+          id: v,
+          label: CRMA_LABELS[v],
+          checked: state.crma.has(v),
+          count: counts.crma.get(v) || 0,
+          star: v === 'strategic',
+        })
       ).join(''),
     })}
 

@@ -12,7 +12,9 @@ const listeners = new Set();
  * Every possible value of each facet, set once at boot. Starting state is
  * "everything selected", so these are also the defaults.
  */
-const totals = { elements: [], stages: [], countries: [], statuses: [], maturities: [] };
+const totals = {
+  elements: [], stages: [], countries: [], statuses: [], maturities: [], crma: [],
+};
 
 export function setTotals(next) {
   Object.assign(totals, next);
@@ -29,6 +31,7 @@ export const state = {
   countries: new Set(),
   statuses: new Set(),
   maturities: new Set(),
+  crma: new Set(),
   query: '',
   // 'facilities' | 'companies'
   resultsTab: 'facilities',
@@ -133,6 +136,7 @@ export function hasAnyFilter() {
     !isFacetFull('countries') ||
     !isFacetFull('statuses') ||
     !isFacetFull('maturities') ||
+    !isFacetFull('crma') ||
     state.query !== ''
   );
 }

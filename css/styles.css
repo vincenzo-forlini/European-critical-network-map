@@ -37,6 +37,9 @@
   --stage-smelting: #37b6ff;
   --stage-recycling: #a4ea86;
   --stage-recovery: #ffed4d;
+  /* Substitution is the one stage that is not a material flow, so it is the one
+     colour with no hue. Adding it cost nothing: worst-case separation stays 17. */
+  --stage-substitution: #9aa3bd;
 
   --country-stroke: rgba(255, 255, 255, 0.62);
   --country-fill: rgba(255, 255, 255, 0.015);
@@ -976,4 +979,13 @@ button {
   color: #9ecbff;
   background: rgba(158, 203, 255, 0.1);
   border-color: rgba(158, 203, 255, 0.3);
+}
+
+/* EU Strategic Project. Gold, because it is a designation rather than a
+   property of the site — and deliberately unlike any stage colour. */
+.chip--crma {
+  color: #ffd479;
+  background: rgba(255, 212, 121, 0.12);
+  border-color: rgba(255, 212, 121, 0.36);
+  font-weight: 600;
 }

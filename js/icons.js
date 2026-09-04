@@ -8,7 +8,9 @@
  * Colour comes from `fill: currentColor`, so a marker sets the hue in CSS.
  */
 
-export const STAGES = ['mining', 'processing', 'refining', 'smelting', 'recycling', 'recovery'];
+export const STAGES = [
+  'mining', 'processing', 'refining', 'smelting', 'recycling', 'recovery', 'substitution',
+];
 
 export const STAGE_LABELS = {
   mining: 'Mining',
@@ -17,6 +19,7 @@ export const STAGE_LABELS = {
   smelting: 'Smelting',
   recycling: 'Recycling',
   recovery: 'Recovery',
+  substitution: 'Substitution',
 };
 
 /**
@@ -36,6 +39,7 @@ export const STAGE_DESCRIPTIONS = {
   smelting: 'Thermal reduction of concentrate into metal',
   recycling: 'Bulk scrap reprocessed back into the same material',
   recovery: 'A minor critical raw material extracted from a complex waste stream',
+  substitution: 'Replacing a critical raw material with something less constrained',
 };
 
 const ICONS = {
@@ -65,6 +69,12 @@ const ICONS = {
     <path d="M2.4 6.9 12.9 3l2.7 7.3-10.5 3.9z"/>
     <path d="M14.6 8.6c2.3 2.4 3.4 5.4 3.6 9h-2.4c-.2-3-1.1-5.4-3-7.4z"/>
     <ellipse cx="17" cy="19.6" rx="4.6" ry="2"/>`,
+
+  // Two arrows swapping places: one material standing in for another. The only
+  // stage that is not a material flow, which is why it is the one neutral colour.
+  substitution: `
+    <path d="M2.5 6h12V3l6 4.5-6 4.5V9h-12z"/>
+    <path d="M21.5 15H9.5v-3l-6 4.5 6 4.5v-3h12z"/>`,
 
   // Horseshoe magnet lifting two particles clear of the stream: picking one
   // valuable material out of a mixture, rather than reprocessing the bulk.
