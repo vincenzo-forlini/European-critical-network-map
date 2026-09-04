@@ -22,6 +22,15 @@ const CRMA_LABELS = {
   'not-listed': 'Not on the list',
 };
 
+const OPEN_DEFAULTS = [
+  ['elements', true],
+  ['stages', true],
+  ['crma', true],
+  ['maturities', true],
+  ['countries', false],
+  ['statuses', false],
+];
+
 const OPEN = new Map([
   ['elements', true],
   ['stages', true],
@@ -195,4 +204,9 @@ export function renderFilters(container, model, state, counts) {
 
 export function toggleGroup(facet) {
   OPEN.set(facet, OPEN.get(facet) === false);
+}
+
+/** Back to the collapsed/expanded pattern the page opens with. */
+export function resetGroups() {
+  for (const [facet, open] of OPEN_DEFAULTS) OPEN.set(facet, open);
 }

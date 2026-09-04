@@ -101,6 +101,9 @@ export function deselectAll(facet) {
 export function selectEverything() {
   for (const facet of Object.keys(totals)) state[facet] = new Set(totals[facet]);
   state.query = '';
+  state.resultsTab = 'facilities';
+  state.detail = null;
+  state.selectedKey = null;
   emit();
 }
 

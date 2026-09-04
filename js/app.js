@@ -16,7 +16,7 @@ import {
   flyToCity, resetView, invalidate, openPopupAt, closePopup,
 } from './map.js';
 import { STAGES } from './icons.js';
-import { renderFilters, toggleGroup } from './filters.js';
+import { renderFilters, toggleGroup, resetGroups } from './filters.js';
 import { renderResults } from './results.js';
 import { cityPanel, companyPanel, elementPanel } from './panels.js';
 import { renderPeriodicTable } from './periodic.js';
@@ -95,6 +95,7 @@ async function boot() {
 
   $('loading').hidden = true;
 
+  watchBreakpoint();
   applyResponsiveSidebar();
   render(S.state);
 }
@@ -104,11 +105,14 @@ async function boot() {
  * bury the map. This runs on every breakpoint crossing, not just at boot —
  * applying it once left a desktop window stuck with a zero-width sidebar.
  */
+const narrowScreen = window.matchMedia('(max-width: 900px)');
+
 function applyResponsiveSidebar() {
-  const narrow = window.matchMedia('(max-width: 900px)');
-  const apply = () => setSidebarOpen(!narrow.matches);
-  apply();
-  narrow.addEventListener('change', apply);
+  setSidebarOpen(!narrowScreen.matches);
+}
+
+function watchBreakpoint() {
+  narrowScreen.addEventListener('change', applyResponsiveSidebar);
 }
 
 function setSidebarOpen(open) {
@@ -264,6 +268,7 @@ function wireChrome() {
   });
 
   $('reset-view').addEventListener('click', resetView);
+  $('reset-all').addEventListener('click', resetEverything);
   $('toggle-sidebar').addEventListener('click', () => {
     setSidebarOpen($('main').classList.contains('sidebar-collapsed'));
   });
@@ -343,6 +348,24 @@ function onDelegatedClick(e) {
     default:
       break;
   }
+}
+
+/**
+ * Back to the opening state: every filter on, no search, no panel open, map
+ * recentred. Distinct from Recentre in the map corner, which moves the view and
+ * leaves the filters alone.
+ */
+function resetEverything() {
+  closePeriodic();
+  closePopup();
+  currentTab = 'filters';
+  productionStage = null;
+  resetGroups();
+  applyResponsiveSidebar();
+  // selectEverything also clears the search, the open panel and the selection,
+  // so this ends in the same state as a page load without the reload.
+  S.selectEverything();
+  resetView();
 }
 
 /* ---------------------------------------------------------- periodic table */

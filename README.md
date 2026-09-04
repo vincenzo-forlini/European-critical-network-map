@@ -8,7 +8,9 @@ is and who runs it. Open a material to read what it is, what it is used for, and
 countries control its supply.
 
 **Explore the CRMs** opens a periodic table with the critical and strategic materials
-highlighted; click any element for its factsheet.
+highlighted; click any element for its factsheet. **Reset map** in the header puts the page back
+exactly as it loads — every filter on, search cleared, panels closed, map recentred — without a
+page reload. *Recentre*, in the map corner, only moves the view and leaves your filters alone.
 
 ![Materials](https://img.shields.io/badge/materials-34%20EU%20CRMs-6aa6ff)
 ![Sites](https://img.shields.io/badge/sites-137-a4ea86)
