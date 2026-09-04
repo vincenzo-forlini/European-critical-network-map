@@ -19,6 +19,7 @@ import { STAGES } from './icons.js';
 import { renderFilters, toggleGroup } from './filters.js';
 import { renderResults } from './results.js';
 import { cityPanel, companyPanel, elementPanel } from './panels.js';
+import { renderPeriodicTable } from './periodic.js';
 import * as S from './state.js';
 import {
   esc, stageChip, statusChip, elementChips, confidenceBadge, sourceLink, crmaChip,
@@ -176,7 +177,14 @@ function renderDetail(state = S.state) {
     body.innerHTML = cityPanel(model, id, stage, visibleIds);
   }
   else if (kind === 'company') body.innerHTML = companyPanel(model, id, news);
-  else if (kind === 'element') body.innerHTML = elementPanel(model, id, { productionStage });
+  else if (kind === 'element') {
+    // Carbon carries both natural graphite and coking coal, so an id may be a
+    // comma-separated list and the panel renders each factsheet in turn.
+    const ids = String(id).split(',').filter(Boolean);
+    body.innerHTML = ids
+      .map((one) => elementPanel(model, one, { productionStage }))
+      .join('<hr class="panel-rule">');
+  }
 
   main.classList.add('detail-open');
   body.scrollTop = 0;
@@ -246,6 +254,15 @@ function wireChrome() {
     closePopup();
   });
 
+  $('open-periodic').addEventListener('click', openPeriodic);
+  $('periodic-close').addEventListener('click', closePeriodic);
+  $('periodic').addEventListener('click', (e) => {
+    if (e.target === $('periodic')) closePeriodic();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !$('periodic').hidden) closePeriodic();
+  });
+
   $('reset-view').addEventListener('click', resetView);
   $('toggle-sidebar').addEventListener('click', () => {
     setSidebarOpen($('main').classList.contains('sidebar-collapsed'));
@@ -296,8 +313,10 @@ function onDelegatedClick(e) {
 
     case 'open-element':
       productionStage = null;
+      closePeriodic(); // harmless when it is not open
       S.setDetail({ kind: 'element', id });
       break;
+
 
     case 'prod-stage':
       productionStage = id;
@@ -320,6 +339,18 @@ function onDelegatedClick(e) {
     default:
       break;
   }
+}
+
+/* ---------------------------------------------------------- periodic table */
+
+function openPeriodic() {
+  renderPeriodicTable($('periodic-body'), model);
+  $('periodic').hidden = false;
+  $('periodic-close').focus();
+}
+
+function closePeriodic() {
+  $('periodic').hidden = true;
 }
 
 /* -------------------------------------------------------------- data errors */

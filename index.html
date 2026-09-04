@@ -22,6 +22,7 @@
     <div class="header__spacer"></div>
     <div class="header__actions">
       <span class="data-banner" title="Every record carries a source link and a confidence flag. Check before citing.">Seed dataset — verify before citing</span>
+      <button class="btn btn--sm btn--accent" id="open-periodic">Explore the CRMs</button>
       <a class="btn btn--sm" href="about.html">About</a>
     </div>
   </header>
@@ -72,6 +73,18 @@
       <div class="detail__body" id="detail-body"></div>
     </aside>
 
+  </div>
+</div>
+
+<!-- Periodic table: which chemical elements the EU treats as critical. -->
+<div class="modal" id="periodic" hidden role="dialog" aria-modal="true" aria-labelledby="periodic-title">
+  <div class="modal__card modal__card--wide">
+    <div class="modal__head">
+      <h2 id="periodic-title">Explore the critical raw materials</h2>
+      <div class="header__spacer"></div>
+      <button class="btn btn--ghost btn--sm" id="periodic-close" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal__body" id="periodic-body"></div>
   </div>
 </div>
 
