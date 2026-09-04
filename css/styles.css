@@ -1188,3 +1188,43 @@ button {
 
 /* Divider between two factsheets shown one after the other. */
 .panel-rule { border: none; border-top: 1px solid var(--border-strong); margin: 26px 0 20px; }
+
+/* Company mark, expanded panel only ---------------------------------------- */
+
+.cohead { display: flex; align-items: center; gap: 13px; margin-bottom: 10px; }
+.cohead__text { min-width: 0; }
+.cohead__text h2 { margin: 0; }
+.cohead__hq { font-size: 12px; color: var(--text-faint); margin-top: 1px; }
+
+.clogo {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 11px;
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  /* The monogram is the floor: if the logo is missing or fails to load, this is
+     what remains, so a company without a logo still looks intentional. */
+  background: hsl(var(--mono-h) 42% 26%);
+}
+.clogo__mono {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: hsl(var(--mono-h) 70% 86%);
+  user-select: none;
+}
+.clogo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  /* Most logos are drawn for a white page. A light plate keeps dark wordmarks
+     legible here without inverting anyone's brand colours. */
+  background: #f4f5f8;
+  padding: 5px;
+}

@@ -114,3 +114,35 @@ export function companyStatusChip(company) {
   const cls = company.status === 'acquired' ? 'chip--acquired' : 'chip--distress';
   return `<span class="chip ${cls}" title="${esc(company.status_note || label)}">&#9888; ${esc(label)}</span>`;
 }
+
+/**
+ * Company mark for the expanded company panel.
+ *
+ * A monogram is always drawn, and the logo image sits on top of it. If the file
+ * is missing or fails to load the monogram simply shows through, so a company
+ * whose logo could not be fetched still looks deliberate rather than broken.
+ *
+ * Colour comes from a hash of the company key, so a given company always gets
+ * the same tile and the panels stay recognisable between visits.
+ */
+export function companyLogo(company) {
+  const initials = (company.name || '?')
+    .replace(/[^A-Za-zÀ-ÿ0-9 ]/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0].toUpperCase())
+    .join('');
+
+  let hash = 0;
+  for (const ch of company.key || company.name || '') hash = (hash * 31 + ch.charCodeAt(0)) | 0;
+  const hue = Math.abs(hash) % 360;
+
+  const img = company.logo
+    ? `<img src="assets/logos/${esc(company.logo)}" alt="" loading="lazy" decoding="async">`
+    : '';
+
+  return `<span class="clogo" style="--mono-h:${hue}" aria-hidden="true">
+    <span class="clogo__mono">${esc(initials)}</span>${img}
+  </span>`;
+}

@@ -384,6 +384,8 @@ function buildCompanies(csvText, report) {
       maturity,
       status,
       status_note: r.status_note || '',
+      // Filename under assets/logos/. Blank is fine: the panel draws a monogram.
+      logo: r.logo || '',
       news_query: r.news_query || '',
       facilities: [],
       _line: r._line,
@@ -478,6 +480,7 @@ function buildFacilities(csvText, { elementIndex, cityIndex, companyIndex }, rep
         maturity: 'incumbent',
         status: 'active',
         status_note: '',
+        logo: '',
         news_query: '',
         facilities: [],
         _synthesised: true,
