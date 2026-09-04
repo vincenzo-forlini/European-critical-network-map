@@ -41,11 +41,13 @@ function facilityDetail(f, elementById) {
       <h4>${esc(f.name)}</h4>
       ${statusChip(f.status)}
     </div>
+    <div class="fdetail__co">
+      ${companyLogo(f.company, { small: true })}
+      <span class="link" data-act="open-company" data-id="${esc(f.companyKey)}">${esc(f.company.name)}</span>
+      ${companyStatusChip(f.company)}
+    </div>
     ${f.crmaProject ? `<div class="sub">${crmaChip(f)}</div>` : ''}
     <dl class="kv">
-      <dt>Operator</dt>
-      <dd><span class="link" data-act="open-company" data-id="${esc(f.companyKey)}">${esc(f.company.name)}</span>
-        ${companyStatusChip(f.company)}</dd>
       <dt>Location</dt><dd>${esc(f.city.name)}, ${esc(f.country)}</dd>
       <dt>Stage</dt><dd>${STAGE_LABELS[f.stage]}</dd>
       ${f.crmaProject ? `<dt>Project</dt><dd>${esc(f.crmaProject)}</dd>` : ''}

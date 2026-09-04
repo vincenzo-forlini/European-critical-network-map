@@ -1228,3 +1228,19 @@ button {
   background: #f4f5f8;
   padding: 5px;
 }
+
+/* Operator line in a facility detail: the mark sits with the company name,
+   directly under the site name and status. */
+.fdetail__co {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.clogo--sm {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+}
+.clogo--sm .clogo__mono { font-size: 10px; }
+.clogo--sm img { padding: 3px; }

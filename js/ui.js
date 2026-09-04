@@ -125,7 +125,7 @@ export function companyStatusChip(company) {
  * Colour comes from a hash of the company key, so a given company always gets
  * the same tile and the panels stay recognisable between visits.
  */
-export function companyLogo(company) {
+export function companyLogo(company, { small = false } = {}) {
   const initials = (company.name || '?')
     .replace(/[^A-Za-zÀ-ÿ0-9 ]/g, ' ')
     .split(/\s+/)
@@ -142,7 +142,7 @@ export function companyLogo(company) {
     ? `<img src="assets/logos/${esc(company.logo)}" alt="" loading="lazy" decoding="async">`
     : '';
 
-  return `<span class="clogo" style="--mono-h:${hue}" aria-hidden="true">
+  return `<span class="clogo${small ? ' clogo--sm' : ''}" style="--mono-h:${hue}" aria-hidden="true">
     <span class="clogo__mono">${esc(initials)}</span>${img}
   </span>`;
 }
