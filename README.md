@@ -8,8 +8,8 @@ is and who runs it. Open a material to read what it is, what it is used for, and
 countries control its supply.
 
 ![Materials](https://img.shields.io/badge/materials-34%20EU%20CRMs-6aa6ff)
-![Sites](https://img.shields.io/badge/sites-135-a4ea86)
-![Strategic projects](https://img.shields.io/badge/EU%20strategic%20projects-44%2F47-ffd479)
+![Sites](https://img.shields.io/badge/sites-137-a4ea86)
+![Strategic projects](https://img.shields.io/badge/EU%20strategic%20projects-46%2F47-ffd479)
 
 ---
 
@@ -133,19 +133,17 @@ Two columns in `facilities.csv` hold this:
 The Act's four categories are coarser than this project's seven stages, so **both are recorded**
 rather than one being inferred from the other.
 
-**44 of the 47 designated EU projects are on the map.** Seventeen of them map onto sites already
+**46 of the 47 designated EU projects are on the map.** Seventeen of them map onto sites already
 in the dataset — Keliber, Cínovec, Barroso, Neves-Corvo, ReeMAP and so on — and were flagged
-rather than duplicated. Three are missing because the annex gives the Member State but not the
-town, and I could not place them honestly:
+rather than duplicated.
 
-| Project | Promoter | Country |
-|---|---|---|
-| European Initiative for Strategic and Sustainable Graphite Production | NGC Battery Materials GmbH | France, Namibia, Germany |
-| P6 Metals | Iberian Resources Spain | Spain |
-| RECOVER-IT | Circular Materials s.r.l. | Italy |
+The one absence is the **European Initiative for Strategic and Sustainable Graphite Production**
+(NGC Battery Materials GmbH). Its plant has not been built and no site has been announced, so
+there is nowhere honest to put a marker. It is designated, and it is not on the map — those are
+both true, and the second follows from the first.
 
-Add a row with a city and they will appear. Several projects that *are* on the map had their town
-inferred the same way — those rows say so in their note and carry lower confidence.
+Several projects that *are* on the map had their town inferred rather than published. Those rows
+say so in their note and carry lower confidence.
 
 **The 13 non-EU strategic projects** (decision of 4 June 2025) are not loaded. Their annex was not
 machine-readable when this was built.
