@@ -527,13 +527,19 @@ export function buildModel(sources) {
 
 /* --------------------------------------------------------------- filtering */
 
-/** Facilities matching the current selection. All criteria are ANDed. */
+/**
+ * Facilities matching the current selection. All criteria are ANDed.
+ *
+ * A facet given as a Set is applied literally, so an empty Set matches nothing —
+ * that is what "Deselect all" means. Passing `null` for a facet skips it, which
+ * is how facetCounts relaxes one dimension at a time.
+ */
 export function filterFacilities(model, filters) {
   const { elements, stages, countries, statuses, query } = filters;
-  const elementSet = elements?.size ? elements : null;
-  const stageSet = stages?.size ? stages : null;
-  const countrySet = countries?.size ? countries : null;
-  const statusSet = statuses?.size ? statuses : null;
+  const elementSet = elements instanceof Set ? elements : null;
+  const stageSet = stages instanceof Set ? stages : null;
+  const countrySet = countries instanceof Set ? countries : null;
+  const statusSet = statuses instanceof Set ? statuses : null;
   const q = (query || '').trim().toLowerCase();
 
   return model.facilities.filter((f) => {

@@ -316,7 +316,7 @@ button {
 .fgroup[data-open="false"] .fgroup__body { display: none; }
 
 .fgroup__body { margin-top: 8px; }
-.fgroup__body--scroll { max-height: 260px; overflow-y: auto; padding-right: 4px; }
+.fgroup__list--scroll { max-height: 250px; overflow-y: auto; padding-right: 4px; }
 
 .fgroup__sub {
   margin: 10px 0 4px;
@@ -363,7 +363,8 @@ button {
 
 .star { color: var(--warn); font-size: 10px; flex: none; }
 
-.fgroup__actions { display: flex; gap: 6px; margin-top: 8px; }
+.fgroup__actions { display: flex; gap: 6px; margin-bottom: 8px; }
+.fgroup__actions .btn { flex: 1; }
 
 /* Results ---------------------------------------------------------------- */
 
@@ -688,94 +689,6 @@ button {
 .sitelist { display: flex; flex-direction: column; gap: 5px; }
 
 /* ===========================================================================
-   Opening gate
-   =========================================================================== */
-
-.gate {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-  background: rgba(6, 6, 9, 0.82);
-  backdrop-filter: blur(6px);
-}
-
-.gate__card {
-  display: grid;
-  grid-template-rows: auto 1fr auto;
-  width: min(880px, 100%);
-  max-height: min(760px, 100%);
-  background: var(--surface);
-  border: 1px solid var(--border-strong);
-  border-radius: 18px;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
-  overflow: hidden;
-}
-
-.gate__head { padding: 22px 26px 16px; border-bottom: 1px solid var(--border); }
-.gate__head h1 { margin: 0 0 5px; font-size: 21px; font-weight: 650; letter-spacing: -0.02em; }
-.gate__head p { margin: 0; color: var(--text-dim); font-size: 13px; max-width: 62ch; }
-
-.gate__body { overflow-y: auto; padding: 20px 26px; min-height: 0; }
-
-.gate__section + .gate__section { margin-top: 24px; }
-.gate__label { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; }
-.gate__label h2 { margin: 0; font-size: 13px; font-weight: 650; }
-.gate__hint { font-size: 12px; color: var(--text-faint); }
-
-.presets { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
-
-.gate__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(196px, 1fr));
-  gap: 2px;
-}
-
-.stage-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
-
-.stage-card {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 11px 12px;
-  text-align: left;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  transition: border-color 0.12s, background 0.12s;
-}
-.stage-card:hover { background: var(--surface-3); }
-.stage-card[aria-pressed="true"] {
-  border-color: var(--stage-c);
-  background: color-mix(in srgb, var(--stage-c) 10%, var(--surface-2));
-}
-.stage-card__icon {
-  flex: none;
-  display: grid; place-items: center;
-  width: 30px; height: 30px;
-  border-radius: 50%;
-  color: var(--stage-c);
-  background: color-mix(in srgb, var(--stage-c) 18%, transparent);
-  border: 1.5px solid color-mix(in srgb, var(--stage-c) 55%, transparent);
-}
-.stage-card[aria-pressed="true"] .stage-card__icon { border-color: var(--stage-c); }
-.stage-card__icon svg { width: 17px; height: 17px; }
-.stage-card__name { font-size: 13px; font-weight: 600; }
-.stage-card__desc { font-size: 11px; color: var(--text-faint); line-height: 1.4; margin-top: 1px; }
-
-.gate__foot {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 26px;
-  border-top: 1px solid var(--border);
-  background: var(--surface-2);
-}
-.gate__summary { flex: 1; font-size: 12px; color: var(--text-dim); }
-
-/* ===========================================================================
    Data error panel — the CSV is hand-edited, so failures must be loud.
    =========================================================================== */
 
@@ -848,9 +761,6 @@ button {
 
 @media (max-width: 620px) {
   .data-banner { display: none; }
-  .gate__card { max-height: 100%; border-radius: 12px; }
-  .gate__head, .gate__body, .gate__foot { padding-left: 16px; padding-right: 16px; }
-  .gate__foot { flex-wrap: wrap; }
   .map-note { display: none; }
 }
 
@@ -873,7 +783,6 @@ button {
 .check__stage { flex: none; display: grid; place-items: center; color: var(--stage-c); }
 .check__stage svg { width: 13px; height: 13px; }
 
-.gate__col { min-width: 0; }
 
 /* Facility detail --------------------------------------------------------- */
 
@@ -1011,4 +920,38 @@ button {
   .detail { border-left: none; border-radius: var(--radius-lg) 0 0 var(--radius-lg); }
   .header { gap: 10px; padding: 0 12px; }
   .header__title { font-size: 14px; }
+}
+
+/* ===========================================================================
+   Panel handle — the sidebar's own toggle, attached to its edge rather than
+   stranded on the far side of the map.
+   =========================================================================== */
+
+.panel-handle {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 520;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 62px;
+  color: var(--text-dim);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-left: none;
+  border-radius: 0 var(--radius) var(--radius) 0;
+  box-shadow: var(--shadow);
+  transition: background 0.12s, color 0.12s, width 0.12s;
+}
+.panel-handle:hover { background: var(--surface-3); color: var(--text); width: 24px; }
+.panel-handle svg { width: 13px; height: 13px; }
+
+/* Points the way it will move the panel: left to hide, right to show. */
+.panel-handle[aria-expanded="false"] svg { transform: rotate(180deg); }
+
+@media (max-width: 900px) {
+  /* The panel is an overlay here, so the handle sits above it when open. */
+  .main:not(.sidebar-collapsed) .panel-handle { left: min(360px, 88vw); }
 }

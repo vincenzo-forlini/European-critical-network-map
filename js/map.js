@@ -74,10 +74,34 @@ export function initMap({ onCountry } = {}) {
   map.on('zoomend', applyMarkerSize);
   map.on('zoomend', updateCityLabels);
   map.on('resize', applyMinZoom);
+  watchContainerSize();
   applyMinZoom();
   applyMarkerSize();
 
   return map;
+}
+
+/**
+ * Keep Leaflet's idea of its own size in step with the element.
+ *
+ * The map container is a CSS grid track: opening a panel or collapsing the
+ * sidebar changes its width with no window resize event, so Leaflet never
+ * recalculates. Its projection origin then goes stale and markers are drawn
+ * against the wrong origin — they visibly detach from the countries beneath
+ * them. Watching the element itself covers every cause at once, rather than
+ * remembering to call invalidateSize() at each call site that might resize it.
+ */
+function watchContainerSize() {
+  if (typeof ResizeObserver === 'undefined') return;
+  let first = true;
+  const observer = new ResizeObserver(() => {
+    if (first) {
+      first = false; // the initial callback fires at the current size
+      return;
+    }
+    map.invalidateSize({ animate: false });
+  });
+  observer.observe(map.getContainer());
 }
 
 /**

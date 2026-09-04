@@ -17,19 +17,51 @@ const OPEN = new Map([
   ['statuses', false],
 ]);
 
-function group({ facet, title, selectedCount, body, scroll }) {
+function group({ facet, title, selectedCount, total, body, scroll }) {
+  const all = selectedCount === total;
+  const none = selectedCount === 0;
   return `<section class="fgroup" data-facet="${facet}" data-open="${OPEN.get(facet) !== false}">
     <button class="fgroup__head" data-act="toggle-group" data-id="${facet}">
       <svg class="fgroup__chev" viewBox="0 0 16 16" fill="none" stroke="currentColor"
            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>
       <span class="fgroup__title">${esc(title)}</span>
-      <span class="fgroup__count">${selectedCount ? `${selectedCount} selected` : ''}</span>
+      <span class="fgroup__count">${all ? 'all' : `${selectedCount} of ${total}`}</span>
     </button>
-    <div class="fgroup__body${scroll ? ' fgroup__body--scroll' : ''}">${body}</div>
+    <div class="fgroup__body">
+      <div class="fgroup__actions">
+        <button class="btn btn--sm" data-act="select-all" data-id="${facet}" ${all ? 'disabled' : ''}>Select all</button>
+        <button class="btn btn--sm" data-act="deselect-all" data-id="${facet}" ${none ? 'disabled' : ''}>Deselect all</button>
+      </div>
+      <div class="fgroup__list${scroll ? ' fgroup__list--scroll' : ''}">${body}</div>
+    </div>
   </section>`;
 }
 
+/**
+ * Capture where each scrollable list is scrolled to, so re-rendering the sidebar
+ * does not throw the reader back to the top. Ticking "Sweden" near the bottom of
+ * the country list otherwise scrolls away from what you just clicked.
+ */
+function captureScroll(container) {
+  const positions = new Map();
+  for (const el of container.querySelectorAll('[data-facet] .fgroup__list')) {
+    positions.set(el.closest('[data-facet]').dataset.facet, el.scrollTop);
+  }
+  const outer = container.closest('.panel-scroll');
+  return { positions, outer: outer ? outer.scrollTop : 0 };
+}
+
+function restoreScroll(container, saved) {
+  for (const el of container.querySelectorAll('[data-facet] .fgroup__list')) {
+    const top = saved.positions.get(el.closest('[data-facet]').dataset.facet);
+    if (top) el.scrollTop = top;
+  }
+  const outer = container.closest('.panel-scroll');
+  if (outer && saved.outer) outer.scrollTop = saved.outer;
+}
+
 export function renderFilters(container, model, state, counts) {
+  const saved = captureScroll(container);
   const materials = [...model.elements].sort((a, b) => a.name.localeCompare(b.name));
   const strategic = materials.filter((e) => e.strategic);
   const other = materials.filter((e) => !e.strategic);
@@ -50,6 +82,7 @@ export function renderFilters(container, model, state, counts) {
       facet: 'elements',
       title: 'Material',
       selectedCount: state.elements.size,
+      total: materials.length,
       scroll: true,
       body: `
         <div class="fgroup__sub">Strategic raw materials</div>
@@ -62,6 +95,7 @@ export function renderFilters(container, model, state, counts) {
       facet: 'stages',
       title: 'Stage of the chain',
       selectedCount: state.stages.size,
+      total: STAGES.length,
       body: STAGES.map((s) =>
         `<label class="check" data-empty="${(counts.stages.get(s) || 0) === 0}"
                 title="${esc(STAGE_DESCRIPTIONS[s])}" style="--stage-c: var(--stage-${s})">
@@ -81,6 +115,7 @@ export function renderFilters(container, model, state, counts) {
       facet: 'countries',
       title: 'Country',
       selectedCount: state.countries.size,
+      total: countries.length,
       scroll: true,
       body: countries
         .map((c) =>
@@ -98,6 +133,7 @@ export function renderFilters(container, model, state, counts) {
       facet: 'statuses',
       title: 'Status',
       selectedCount: state.statuses.size,
+      total: STATUS_VALUES.length,
       body: STATUS_VALUES.map((s) =>
         checkRow({
           id: s,
@@ -108,6 +144,8 @@ export function renderFilters(container, model, state, counts) {
       ).join(''),
     })}
   `;
+
+  restoreScroll(container, saved);
 }
 
 export function toggleGroup(facet) {

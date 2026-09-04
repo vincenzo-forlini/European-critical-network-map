@@ -22,7 +22,6 @@
     <div class="header__spacer"></div>
     <div class="header__actions">
       <span class="data-banner" title="Every record carries a source link and a confidence flag. Check before citing.">Seed dataset — verify before citing</span>
-      <button class="btn btn--sm" id="reopen-gate">Change selection</button>
       <a class="btn btn--sm" href="about.html">About</a>
     </div>
   </header>
@@ -51,8 +50,12 @@
     <div class="map-wrap">
       <div id="map"></div>
 
+      <button class="panel-handle" id="toggle-sidebar" aria-label="Hide the filter panel" aria-expanded="true">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round"><path d="M10 3L5 8l5 5"/></svg>
+      </button>
+
       <div class="map-toolbar">
-        <button class="btn btn--sm" id="toggle-sidebar" aria-label="Show or hide the filter panel">Filters</button>
         <button class="btn btn--sm" id="reset-view">Reset view</button>
       </div>
 
@@ -69,44 +72,6 @@
       <div class="detail__body" id="detail-body"></div>
     </aside>
 
-  </div>
-</div>
-
-<!-- Opening gate: pick materials and stages before anything is drawn. -->
-<div class="gate" id="gate" hidden role="dialog" aria-modal="true" aria-labelledby="gate-title">
-  <div class="gate__card">
-    <div class="gate__head">
-      <h1 id="gate-title">What do you want to see?</h1>
-      <p>
-        Choose the critical raw materials and the stages of the supply chain you care about.
-        The map then shows only the sites that match. You can change this at any time.
-      </p>
-    </div>
-
-    <div class="gate__body">
-      <section class="gate__section">
-        <div class="gate__label">
-          <h2>Materials</h2>
-          <span class="gate__hint" id="gate-el-hint"></span>
-        </div>
-        <div class="presets" id="gate-presets"></div>
-        <div class="gate__grid" id="gate-elements"></div>
-      </section>
-
-      <section class="gate__section">
-        <div class="gate__label">
-          <h2>Stages of the chain</h2>
-          <span class="gate__hint">Colour and icon on the map both mean stage.</span>
-        </div>
-        <div class="stage-grid" id="gate-stages"></div>
-      </section>
-    </div>
-
-    <div class="gate__foot">
-      <span class="gate__summary" id="gate-summary"></span>
-      <button class="btn" id="gate-everything">Show everything</button>
-      <button class="btn btn--primary" id="gate-go">Show map</button>
-    </div>
   </div>
 </div>
 

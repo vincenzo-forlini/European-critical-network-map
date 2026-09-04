@@ -8,6 +8,23 @@
 
 const listeners = new Set();
 
+/**
+ * Every possible value of each facet, set once at boot.
+ *
+ * Needed for two things: starting with everything selected, and keeping the URL
+ * short. A facet that is fully selected is the default, so it is left out of the
+ * hash rather than spelling out all 34 material ids.
+ */
+const totals = { elements: [], stages: [], countries: [], statuses: [] };
+
+export function setTotals(next) {
+  Object.assign(totals, next);
+}
+
+export function totalFor(facet) {
+  return totals[facet] || [];
+}
+
 export const state = {
   elements: new Set(),
   stages: new Set(),
@@ -68,18 +85,27 @@ export function setMany(facet, values) {
   emit();
 }
 
-export function clearFacet(facet) {
-  state[facet].clear();
+/** Tick every option in a category. */
+export function selectAll(facet) {
+  state[facet] = new Set(totals[facet]);
   emit();
 }
 
-export function clearAll() {
-  state.elements.clear();
-  state.stages.clear();
-  state.countries.clear();
-  state.statuses.clear();
+/** Untick every option in a category. The map then shows nothing for it, which
+ *  is the literal meaning of the button rather than a hidden "show everything". */
+export function deselectAll(facet) {
+  state[facet] = new Set();
+  emit();
+}
+
+export function selectEverything() {
+  for (const facet of Object.keys(totals)) state[facet] = new Set(totals[facet]);
   state.query = '';
   emit();
+}
+
+export function isFacetFull(facet) {
+  return state[facet].size === totals[facet].length;
 }
 
 export function setQuery(q) {
@@ -102,12 +128,13 @@ export function setResultsTab(tab) {
   emit({ syncHash: false });
 }
 
+/** True when the view has been narrowed from the default "everything" state. */
 export function hasAnyFilter() {
   return (
-    state.elements.size > 0 ||
-    state.stages.size > 0 ||
-    state.countries.size > 0 ||
-    state.statuses.size > 0 ||
+    !isFacetFull('elements') ||
+    !isFacetFull('stages') ||
+    !isFacetFull('countries') ||
+    !isFacetFull('statuses') ||
     state.query !== ''
   );
 }
@@ -126,7 +153,10 @@ let writing = false;
 function writeHash() {
   const parts = [];
   for (const [facet, key] of FACETS) {
-    if (state[facet].size) parts.push(`${key}=${[...state[facet]].map(encodeURIComponent).join(',')}`);
+    // A fully selected facet is the default. Leaving it out keeps the URL short
+    // instead of listing all 34 material ids on every page load.
+    if (isFacetFull(facet)) continue;
+    parts.push(`${key}=${[...state[facet]].map(encodeURIComponent).join(',') || '-'}`);
   }
   if (state.query) parts.push(`q=${encodeURIComponent(state.query)}`);
 
@@ -140,8 +170,16 @@ function writeHash() {
   writing = false;
 }
 
-/** @returns {boolean} whether the hash carried a usable selection. */
+/**
+ * Apply the URL hash on top of the default "everything selected" state.
+ *
+ * A facet absent from the hash means it was not narrowed, so it stays full.
+ * `-` means the facet was explicitly emptied.
+ */
 export function readHash() {
+  for (const facet of Object.keys(totals)) state[facet] = new Set(totals[facet]);
+  state.query = '';
+
   const raw = window.location.hash.replace(/^#/, '');
   if (!raw) return false;
 
@@ -160,7 +198,8 @@ export function readHash() {
     }
     const facet = FACETS.find(([, k]) => k === key)?.[0];
     if (!facet) continue;
-    state[facet] = new Set(value.split(',').map(decodeURIComponent).filter(Boolean));
+    state[facet] =
+      value === '-' ? new Set() : new Set(value.split(',').map(decodeURIComponent).filter(Boolean));
     found = true;
   }
   return found;

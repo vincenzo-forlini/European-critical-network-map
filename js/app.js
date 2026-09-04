@@ -1,24 +1,24 @@
 /**
  * Boot and wiring.
  *
- * Load order: CSVs -> model -> map -> gate (unless a shared link already
- * answered it) -> render loop. Every UI click is delegated from a small number
- * of listeners using data-act attributes, so nothing has to hold references to
- * everything else.
+ * Load order: CSVs -> model -> map -> render loop. The map opens showing the
+ * whole dataset; a URL hash can narrow it. Every UI click is delegated from a
+ * small number of listeners using data-act attributes, so nothing has to hold
+ * references to everything else.
  */
 
 import {
   buildModel, filterFacilities, facetCounts, groupForMap, countriesByFacilityCount,
+  STATUS_VALUES,
 } from './data.js';
 import {
   initMap, renderBasemap, renderCities, renderMarkers, renderLegend, tintCountries, setSelected,
   flyToCity, resetView, invalidate, openPopupAt, closePopup,
 } from './map.js';
-import { STAGES, STAGE_LABELS, stageIcon } from './icons.js';
+import { STAGES } from './icons.js';
 import { renderFilters, toggleGroup } from './filters.js';
 import { renderResults } from './results.js';
 import { cityPanel, companyPanel, elementPanel } from './panels.js';
-import { openGate, closeGate, wireGate } from './onboarding.js';
 import * as S from './state.js';
 import { esc, stageChip, statusChip, elementChips, confidenceBadge, sourceLink } from './ui.js';
 
@@ -70,44 +70,50 @@ async function boot() {
 
   showIssues(model.issues);
 
+  // Everything is selected by default: the map opens showing the whole dataset,
+  // and the reader narrows from there rather than choosing before seeing anything.
+  S.setTotals({
+    elements: model.elements.map((e) => e.id),
+    stages: [...STAGES],
+    countries: [...new Set(model.facilities.map((f) => f.country))].sort(),
+    statuses: [...STATUS_VALUES],
+  });
+
   initMap({ onCountry: (name) => { S.toggle('countries', name); } });
   renderBasemap(geo);
   renderCities(model.cities);
   renderLegend($('legend'), STAGES);
 
   wireChrome();
-  wireGate(model, commitGate);
   S.subscribe(render);
   S.watchHash(render);
 
   $('loading').hidden = true;
 
-  // On a narrow screen the sidebar is an overlay sheet, so starting it open
-  // would bury the map behind it. Start collapsed and let the button open it.
-  if (window.matchMedia('(max-width: 900px)').matches) {
-    $('main').classList.add('sidebar-collapsed');
-  }
-
-  // A shared link has already answered the gate's question.
-  const fromHash = S.readHash();
-  if (fromHash) {
-    S.state.gateSeen = true;
-    render(S.state);
-  } else {
-    S.state.stages = new Set(STAGES);
-    render(S.state);
-    openGate(model, S.state);
-  }
+  applyResponsiveSidebar();
+  // A link may carry a narrower selection; otherwise this fills in "everything".
+  S.readHash();
+  render(S.state);
 }
 
-function commitGate(draft) {
-  S.state.elements = new Set(draft.elements);
-  S.state.stages = new Set(draft.stages);
-  S.state.gateSeen = true;
-  closeGate();
-  S.emit();
-  const groups = currentGroups();
-  if (groups.length) requestAnimationFrame(() => resetView());
+/**
+ * Below the breakpoint the sidebar is an overlay sheet, so leaving it open would
+ * bury the map. This runs on every breakpoint crossing, not just at boot —
+ * applying it once left a desktop window stuck with a zero-width sidebar.
+ */
+function applyResponsiveSidebar() {
+  const narrow = window.matchMedia('(max-width: 900px)');
+  const apply = () => setSidebarOpen(!narrow.matches);
+  apply();
+  narrow.addEventListener('change', apply);
+}
+
+function setSidebarOpen(open) {
+  const main = $('main');
+  main.classList.toggle('sidebar-collapsed', !open);
+  const btn = $('toggle-sidebar');
+  btn.setAttribute('aria-expanded', String(open));
+  btn.setAttribute('aria-label', open ? 'Hide the filter panel' : 'Show the filter panel');
 }
 
 /* ------------------------------------------------------------------ render */
@@ -237,10 +243,8 @@ function wireChrome() {
   });
 
   $('reset-view').addEventListener('click', resetView);
-  $('reopen-gate').addEventListener('click', () => openGate(model, S.state));
   $('toggle-sidebar').addEventListener('click', () => {
-    $('main').classList.toggle('sidebar-collapsed');
-    setTimeout(invalidate, 200);
+    setSidebarOpen($('main').classList.contains('sidebar-collapsed'));
   });
   $('errors-close').addEventListener('click', () => { $('errors').hidden = true; });
 
@@ -258,7 +262,7 @@ function wireChrome() {
 
 function onDelegatedClick(e) {
   const el = e.target.closest('[data-act]');
-  if (!el || el.closest('#gate')) return; // the gate has its own handler
+  if (!el) return;
   const { act, id } = el.dataset;
 
   switch (act) {
@@ -299,6 +303,14 @@ function onDelegatedClick(e) {
     case 'filter-element':
       S.setMany('elements', [id]);
       currentTab = 'results';
+      break;
+
+    case 'select-all':
+      S.selectAll(id);
+      break;
+
+    case 'deselect-all':
+      S.deselectAll(id);
       break;
 
     default:
