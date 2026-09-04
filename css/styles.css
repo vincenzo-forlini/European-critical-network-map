@@ -601,8 +601,6 @@ button {
   border: 1px solid var(--border);
 }
 
-.map-toolbar { position: absolute; right: 14px; top: 14px; z-index: 500; display: flex; gap: 6px; }
-.map-toolbar .btn { box-shadow: var(--shadow); }
 
 .leaflet-control-zoom { border: none !important; box-shadow: var(--shadow) !important; }
 .leaflet-control-zoom a {
@@ -927,7 +925,6 @@ button {
 /* On a narrow screen the panels are overlay sheets, so the map keeps full width
    and the toolbar has to clear Leaflet's zoom control. */
 @media (max-width: 900px) {
-  .map-toolbar { top: 12px; right: 12px; }
   .sidebar { border-right: none; border-radius: 0 var(--radius-lg) var(--radius-lg) 0; }
   .detail { border-left: none; border-radius: var(--radius-lg) 0 0 var(--radius-lg); }
   .header { gap: 10px; padding: 0 12px; }

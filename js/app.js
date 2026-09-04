@@ -267,7 +267,6 @@ function wireChrome() {
     if (e.key === 'Escape' && !$('periodic').hidden) closePeriodic();
   });
 
-  $('reset-view').addEventListener('click', resetView);
   $('reset-all').addEventListener('click', resetEverything);
   $('toggle-sidebar').addEventListener('click', () => {
     setSidebarOpen($('main').classList.contains('sidebar-collapsed'));
@@ -352,8 +351,7 @@ function onDelegatedClick(e) {
 
 /**
  * Back to the opening state: every filter on, no search, no panel open, map
- * recentred. Distinct from Recentre in the map corner, which moves the view and
- * leaves the filters alone.
+ * recentred. Effectively a page refresh without the reload.
  */
 function resetEverything() {
   closePeriodic();
