@@ -989,3 +989,17 @@ button {
   border-color: rgba(255, 212, 121, 0.36);
   font-weight: 600;
 }
+
+/* An operator that is not trading normally. Red, because a designated project
+   or an operating plant means much less when the company behind it is in court. */
+.chip--distress {
+  color: #ff8f8f;
+  background: rgba(255, 107, 107, 0.12);
+  border-color: rgba(255, 107, 107, 0.4);
+  font-weight: 600;
+}
+.chip--acquired {
+  color: var(--text-dim);
+  background: var(--surface-3);
+  border-color: var(--border-strong);
+}

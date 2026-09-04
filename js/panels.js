@@ -11,7 +11,7 @@ import { productionShares, productionSeries, productionStages, productionYears }
 import { donutChart, lineChart, meter } from './charts.js';
 import {
   esc, stageChip, statusChip, elementChips, confidenceBadge, sourceLink, empty, plural,
-  maturityChip, crmaChip,
+  maturityChip, crmaChip, companyStatusChip,
 } from './ui.js';
 
 /* ------------------------------------------------------------------- parts */
@@ -27,6 +27,7 @@ function facilityCard(f, elementById) {
       &middot; ${esc(f.city.name)}, ${esc(f.country)}
     </div>
     <div class="rcard__meta">
+      ${companyStatusChip(f.company)}
       ${crmaChip(f, { compact: true })}
       ${stageChip(f.stage)}
       ${elementChips(f.elements, elementById, { max: 3 })}
@@ -43,7 +44,8 @@ function facilityDetail(f, elementById) {
     ${f.crmaProject ? `<div class="sub">${crmaChip(f)}</div>` : ''}
     <dl class="kv">
       <dt>Operator</dt>
-      <dd><span class="link" data-act="open-company" data-id="${esc(f.companyKey)}">${esc(f.company.name)}</span></dd>
+      <dd><span class="link" data-act="open-company" data-id="${esc(f.companyKey)}">${esc(f.company.name)}</span>
+        ${companyStatusChip(f.company)}</dd>
       <dt>Location</dt><dd>${esc(f.city.name)}, ${esc(f.country)}</dd>
       <dt>Stage</dt><dd>${STAGE_LABELS[f.stage]}</dd>
       ${f.crmaProject ? `<dt>Project</dt><dd>${esc(f.crmaProject)}</dd>` : ''}
@@ -122,6 +124,7 @@ export function companyPanel(model, companyKey, news) {
     <h2>${esc(company.name)}</h2>
     <div class="sub">
       ${maturityChip(company.maturity)}
+      ${companyStatusChip(company)}
       ${company.type ? `<span class="muted">${esc(company.type)}</span>` : ''}
       ${company.hq_country ? `<span class="faint">&middot;</span><span class="muted">HQ ${esc(company.hq_country)}</span>` : ''}
     </div>

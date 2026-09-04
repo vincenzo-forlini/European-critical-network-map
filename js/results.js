@@ -10,7 +10,7 @@ import { groupByCompany } from './data.js';
 import { STAGE_LABELS } from './icons.js';
 import {
   esc, stageChip, statusChip, elementChips, confidenceBadge, empty, plural, maturityChip,
-  crmaChip,
+  crmaChip, companyStatusChip,
 } from './ui.js';
 
 export function renderResults(container, model, state, facilities) {
@@ -63,6 +63,7 @@ function renderFacilities(facilities, model, state) {
           </div>
           <div class="rcard__where">${esc(f.company.name)} &middot; ${esc(f.city.name)}, ${esc(f.country)}</div>
           <div class="rcard__meta">
+            ${companyStatusChip(f.company)}
             ${crmaChip(f, { compact: true })}
             ${stageChip(f.stage)}
             ${elementChips(f.elements, model.elementById, { max: 3 })}
@@ -83,6 +84,7 @@ function renderCompanies(companies, model) {
           <div class="rcard__top">
             <span class="rcard__name">${esc(g.company.name)}</span>
             ${maturityChip(g.company.maturity)}
+            ${companyStatusChip(g.company)}
             <span class="pill">${plural(g.facilities.length, 'site')}</span>
           </div>
           <div class="rcard__where">${esc(countries.join(', '))}</div>

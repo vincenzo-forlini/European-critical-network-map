@@ -94,6 +94,23 @@ panel rather than failing silently.
 Start-ups and scale-ups get a chip next to their name. Incumbents do not: they are the norm
 here, and badging sixty of them would drown the dozen that are new.
 
+### Operators in difficulty
+
+`companies.csv` also carries `status` — `active` (default), `insolvency`, `liquidation`,
+`acquired` or `dissolved` — with a `status_note` giving the detail and date.
+
+This sits on the **company**, not the site, because the two genuinely differ: a plant can run
+normally while its owner is in court. Where it is set, a **⚠** chip appears next to the operator
+everywhere it is named, and the validator lists distressed operators on every run.
+
+Set it sparingly. Asserting insolvency about a real company on thin evidence is worse than
+leaving the cell blank, so the validator warns if you flag one without a `status_note`. Two are
+flagged out of the box: Northvolt Revolt and Larco.
+
+That flag exists because of a real conflict in the data. The CRM Act annex of March 2025 lists
+NorthCYCLE as an ongoing Strategic Project; Northvolt filed for bankruptcy in Sweden that same
+month. Neither source is wrong, and the map shows both rather than silently picking one.
+
 ---
 
 ## EU Strategic Projects

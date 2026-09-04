@@ -92,6 +92,25 @@ console.log(
 const unchecked = model.facilities.filter((f) => !f.last_checked).length;
 if (unchecked) console.log(dim(`  ${unchecked} site(s) have never been source-verified.`));
 
+// Designated projects and distressed operators, since both change how much
+// weight a row deserves.
+const strategic = model.facilities.filter((f) => f.crmaProject);
+if (strategic.length) {
+  const projects = new Set(strategic.map((f) => f.crmaProject));
+  console.log(
+    dim(`  ${projects.size} EU Strategic Project(s) across ${strategic.length} site(s).`)
+  );
+}
+
+const distressed = model.companies.filter((c) => c.status && c.status !== 'active');
+if (distressed.length) {
+  console.log(yellow(`\n  ${distressed.length} operator(s) not trading normally:`));
+  for (const c of distressed) {
+    const sites = c.facilities.length;
+    console.log(yellow(`    • ${c.name} — ${c.status} (${sites} site${sites === 1 ? '' : 's'})`));
+  }
+}
+
 printGroup(`${model.errors.length} error(s)`, model.errors, red);
 printGroup(`${model.warnings.length} warning(s)`, model.warnings, yellow);
 

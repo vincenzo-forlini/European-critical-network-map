@@ -95,3 +95,22 @@ export function crmaChip(facility, { compact = false } = {}) {
     compact ? 'Project' : 'EU Strategic Project'
   }</span>`;
 }
+
+const COMPANY_STATUS_LABELS = {
+  insolvency: 'In insolvency',
+  liquidation: 'In liquidation',
+  acquired: 'Acquired',
+  dissolved: 'Dissolved',
+};
+
+/**
+ * Flags an operator that is not trading normally. Worth showing wherever the
+ * company appears: a designated project or an operating plant means much less
+ * when the company behind it is in court.
+ */
+export function companyStatusChip(company) {
+  if (!company || !company.status || company.status === 'active') return '';
+  const label = COMPANY_STATUS_LABELS[company.status] || company.status;
+  const cls = company.status === 'acquired' ? 'chip--acquired' : 'chip--distress';
+  return `<span class="chip ${cls}" title="${esc(company.status_note || label)}">&#9888; ${esc(label)}</span>`;
+}

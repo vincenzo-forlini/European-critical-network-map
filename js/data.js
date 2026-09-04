@@ -35,6 +35,22 @@ export const MATURITY_VALUES = ['incumbent', 'scale-up', 'startup'];
  */
 export const CRMA_VALUES = ['strategic', 'not-listed'];
 
+/**
+ * Corporate standing of the operator.
+ *
+ * Deliberately a property of the company, not of the site. A plant can run
+ * normally while its owner is in court — Larco's Larymna works and Northvolt's
+ * recycling arm are both cases where the site status and the company status say
+ * different things, and collapsing them into one field would lose whichever is
+ * the more interesting half.
+ *
+ * `active` is the default, so a blank cell means an ordinary company rather
+ * than missing data.
+ */
+export const COMPANY_STATUS_VALUES = [
+  'active', 'insolvency', 'liquidation', 'acquired', 'dissolved',
+];
+
 /** The Act's own four value-chain categories, kept verbatim. They are coarser
  *  than this project's stages, so both are recorded rather than one inferred. */
 export const CRMA_STAGES = ['extraction', 'processing', 'recycling', 'substitution'];
@@ -345,6 +361,20 @@ function buildCompanies(csvText, report) {
       continue;
     }
 
+    const status = normaliseKey(r.status) || 'active';
+    if (!COMPANY_STATUS_VALUES.includes(status)) {
+      report.error('companies.csv', r._line, `"${r.status}" is not a valid company status for ${name}.`,
+        `Use one of: ${COMPANY_STATUS_VALUES.join(', ')}. Leave it blank for an ordinary trading company.`);
+      continue;
+    }
+    // A bare "insolvency" with no date or detail is close to useless, and it is
+    // a serious thing to assert about a real company.
+    if (status !== 'active' && !r.status_note) {
+      report.warn('companies.csv', r._line,
+        `${name} is flagged "${status}" with no status_note.`,
+        'Say what happened and when, so a reader can judge how stale the flag is.');
+    }
+
     const company = {
       key,
       name,
@@ -352,6 +382,8 @@ function buildCompanies(csvText, report) {
       website: r.website || '',
       type: r.type || '',
       maturity,
+      status,
+      status_note: r.status_note || '',
       news_query: r.news_query || '',
       facilities: [],
       _line: r._line,
@@ -444,6 +476,8 @@ function buildFacilities(csvText, { elementIndex, cityIndex, companyIndex }, rep
         website: '',
         type: '',
         maturity: 'incumbent',
+        status: 'active',
+        status_note: '',
         news_query: '',
         facilities: [],
         _synthesised: true,
