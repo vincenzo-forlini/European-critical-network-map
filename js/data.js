@@ -473,14 +473,17 @@ function buildFacilities(csvText, { elementIndex, cityIndex, companyIndex }, rep
     // headline entity — the project name is a label on top of it, not a
     // replacement for it.
     const crmaProject = (r.crma_project || '').trim();
-    const crmaStage = normaliseKey(r.crma_stage);
-    if (crmaStage && !CRMA_STAGES.includes(crmaStage)) {
+    // Several designated projects are integrated across two categories, so this
+    // is a multi-value field: "extraction|processing".
+    const crmaStage = splitList(r.crma_stage).map(normaliseKey);
+    const badStage = crmaStage.find((s) => !CRMA_STAGES.includes(s));
+    if (badStage) {
       report.error('facilities.csv', line,
-        `"${r.crma_stage}" is not a CRM Act value-chain category for ${r.name || id}.`,
-        `Use one of: ${CRMA_STAGES.join(', ')}.`);
+        `"${badStage}" is not a CRM Act value-chain category for ${r.name || id}.`,
+        `Use one or more of: ${CRMA_STAGES.join(', ')}, separated by "|".`);
       continue;
     }
-    if (crmaStage && !crmaProject) {
+    if (crmaStage.length && !crmaProject) {
       report.warn('facilities.csv', line,
         `${r.name || id} has a crma_stage but no crma_project name.`);
     }

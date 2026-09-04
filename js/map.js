@@ -30,7 +30,6 @@ let basemapLayer = null;
 let markerLayer = null;
 const markersByKey = new Map();
 let selectedKey = null;
-let onCountryClick = null;
 
 /** Marker diameter in px at a given zoom. Small when zoomed out, or dense
  *  regions like the Low Countries turn into one unreadable blob. */
@@ -47,9 +46,7 @@ function applyMarkerSize() {
   map.getContainer().style.setProperty('--marker-size', `${markerSizeForZoom(map.getZoom())}px`);
 }
 
-export function initMap({ onCountry } = {}) {
-  onCountryClick = onCountry || null;
-
+export function initMap() {
   map = L.map('map', {
     center: EUROPE_CENTRE,
     zoom: preferredZoom(),
@@ -131,6 +128,7 @@ export function renderBasemap(geojson) {
   if (basemapLayer) basemapLayer.remove();
 
   basemapLayer = L.geoJSON(geojson, {
+    interactive: true,
     style: () => ({
       className: 'country',
       color: 'rgba(255,255,255,0.72)',
@@ -144,9 +142,11 @@ export function renderBasemap(geojson) {
       const name = feature.properties?.name;
       if (!name) return;
 
+      // Hover only. Countries are not clickable: filtering by a stray click
+      // while panning the map was a persistent nuisance, and the filter panel
+      // already does this deliberately.
       layer.on('mouseover', () => layer.setStyle({ fillOpacity: 0.07 }));
       layer.on('mouseout', () => layer.setStyle({ fillOpacity: layer.options._tint ?? 0.015 }));
-      layer.on('click', () => onCountryClick && onCountryClick(name));
       layer.bindTooltip(name, { sticky: true, direction: 'top', opacity: 0.9, className: 'country-tip' });
     },
   }).addTo(map);

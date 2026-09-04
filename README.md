@@ -8,7 +8,8 @@ is and who runs it. Open a material to read what it is, what it is used for, and
 countries control its supply.
 
 ![Materials](https://img.shields.io/badge/materials-34%20EU%20CRMs-6aa6ff)
-![Sites](https://img.shields.io/badge/sites-105-a4ea86)
+![Sites](https://img.shields.io/badge/sites-135-a4ea86)
+![Strategic projects](https://img.shields.io/badge/EU%20strategic%20projects-44%2F47-ffd479)
 
 ---
 
@@ -95,6 +96,45 @@ here, and badging sixty of them would drown the dozen that are new.
 
 ---
 
+## EU Strategic Projects
+
+Sites that form part of a Strategic Project designated under the Critical Raw Materials Act
+carry a **★ Project** label and can be filtered on their own. These are the most authoritative
+rows here: project name, promoter, country, materials and value-chain stage are all transcribed
+from [the Commission's annex](https://single-market-economy.ec.europa.eu/sectors/raw-materials/areas-specific-interest/critical-raw-materials/strategic-projects-under-crma/selected-projects_en)
+to decision C(2025) 1904 of 25 March 2025.
+
+The promoting company stays the headline throughout — a card reads *Eramet* with a Project
+label, not *Ageli*. Who is building the thing matters more than the project's codename.
+
+Two columns in `facilities.csv` hold this:
+
+- `crma_project` — the official project name. Its presence is what makes a row a strategic project.
+- `crma_stage` — the Act's own value-chain category: `extraction`, `processing`, `recycling` or
+  `substitution`. Multi-value with `|`, because several projects are integrated across two.
+
+The Act's four categories are coarser than this project's seven stages, so **both are recorded**
+rather than one being inferred from the other.
+
+**44 of the 47 designated EU projects are on the map.** Seventeen of them map onto sites already
+in the dataset — Keliber, Cínovec, Barroso, Neves-Corvo, ReeMAP and so on — and were flagged
+rather than duplicated. Three are missing because the annex gives the Member State but not the
+town, and I could not place them honestly:
+
+| Project | Promoter | Country |
+|---|---|---|
+| European Initiative for Strategic and Sustainable Graphite Production | NGC Battery Materials GmbH | France, Namibia, Germany |
+| P6 Metals | Iberian Resources Spain | Spain |
+| RECOVER-IT | Circular Materials s.r.l. | Italy |
+
+Add a row with a city and they will appear. Several projects that *are* on the map had their town
+inferred the same way — those rows say so in their note and carry lower confidence.
+
+**The 13 non-EU strategic projects** (decision of 4 June 2025) are not loaded. Their annex was not
+machine-readable when this was built.
+
+---
+
 ## Honesty about the data
 
 **This is a seed dataset, and no row has been verified against its source.** It was compiled
@@ -168,12 +208,14 @@ node scripts/build-europe-geo.mjs
 ### Reading the map
 
 The pictogram and the colour both encode the **stage**: magenta mining, orange processing,
-blue refining, cyan smelting, green recycling, yellow recovery. Encoding it twice keeps the
+violet refining, cyan smelting, green recycling, yellow recovery, grey substitution. Encoding it twice keeps the
 map legible at small marker sizes and readable when hue alone is not available.
 
 The four non-fixed colours were picked by maximising the minimum perceptual distance across
-normal, protanopic, deuteranopic and tritanopic vision — the worst pair now sits at a
-distance of 17, with every colour at 5.2:1 contrast or better on the map background. Magenta
+normal, protanopic, deuteranopic and tritanopic vision — the worst pair sits at a
+distance of 18, with every colour at 4.9:1 contrast or better on the map background.
+Substitution is the one stage with no hue at all, which is fitting: it is the one category
+that is not a material flow. Magenta
 mining and cyan smelting are fixed by the original design. If you change a stage colour,
 re-run that check rather than trusting the eye: the first palette here looked fine and put
 smelting and recycling at a deuteranopic distance of *zero*.

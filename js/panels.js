@@ -47,7 +47,7 @@ function facilityDetail(f, elementById) {
       <dt>Location</dt><dd>${esc(f.city.name)}, ${esc(f.country)}</dd>
       <dt>Stage</dt><dd>${STAGE_LABELS[f.stage]}</dd>
       ${f.crmaProject ? `<dt>Project</dt><dd>${esc(f.crmaProject)}</dd>` : ''}
-      ${f.crmaStage ? `<dt>CRM Act stage</dt><dd>${esc(f.crmaStage)}</dd>` : ''}
+      ${f.crmaStage.length ? `<dt>CRM Act stage</dt><dd>${esc(f.crmaStage.join(', '))}</dd>` : ''}
       <dt>Materials</dt><dd>${f.elements.map((id) =>
         `<span class="link" data-act="open-element" data-id="${esc(id)}">${esc(elementById.get(id)?.name || id)}</span>`
       ).join(', ')}</dd>

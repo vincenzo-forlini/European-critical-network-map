@@ -28,12 +28,12 @@
      across normal, protanopic, deuteranopic and tritanopic vision. The earlier
      palette put cyan smelting and violet recycling at a deuteranopic distance of
      ZERO — literally the same colour to about one man in twelve. This one holds
-     a worst-case distance of 17, with every colour at 5.2:1 contrast or better
+     a worst-case distance of 18, with every colour at 4.9:1 contrast or better
      against the map background. Reordering these is fine; substituting one is
      not, without re-running that check. */
   --stage-mining: #ff3d86;
   --stage-processing: #ff824d;
-  --stage-refining: #4b7bff;
+  --stage-refining: #a855f7;
   --stage-smelting: #37b6ff;
   --stage-recycling: #a4ea86;
   --stage-recovery: #ffed4d;

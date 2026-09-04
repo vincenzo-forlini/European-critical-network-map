@@ -90,7 +90,7 @@ export function maturityChip(maturity) {
 export function crmaChip(facility, { compact = false } = {}) {
   if (!facility.crmaProject) return '';
   const title = `EU Strategic Project: ${facility.crmaProject}` +
-    (facility.crmaStage ? ` (${facility.crmaStage})` : '');
+    (facility.crmaStage.length ? ` (${facility.crmaStage.join(', ')})` : '');
   return `<span class="chip chip--crma" title="${esc(title)}">&#9733; ${
     compact ? 'Project' : 'EU Strategic Project'
   }</span>`;

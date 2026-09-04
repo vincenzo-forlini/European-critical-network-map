@@ -83,7 +83,7 @@ async function boot() {
     crma: [...CRMA_VALUES],
   });
 
-  initMap({ onCountry: (name) => { S.toggle('countries', name); } });
+  initMap();
   renderBasemap(geo);
   renderCities(model.cities);
   renderLegend($('legend'), STAGES);
