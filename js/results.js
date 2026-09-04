@@ -12,9 +12,16 @@ import { esc, stageChip, statusChip, elementChips, confidenceBadge, empty, plura
 
 export function renderResults(container, model, state, facilities) {
   if (facilities.length === 0) {
+    // Name the category that is actually empty, rather than guessing at the cause.
+    const emptied = ['elements', 'stages', 'countries', 'statuses'].filter(
+      (f) => state[f].size === 0
+    );
+    const labels = { elements: 'material', stages: 'stage', countries: 'country', statuses: 'status' };
     container.innerHTML = empty(
       'Nothing matches',
-      'Try removing a filter, or widening the material selection.'
+      emptied.length
+        ? `Every ${emptied.map((f) => labels[f]).join(' and ')} is deselected. Use "Select all" to bring them back.`
+        : 'Try removing a filter, or widening the selection.'
     );
     return;
   }

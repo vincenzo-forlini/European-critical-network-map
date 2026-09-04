@@ -323,7 +323,9 @@ export function invalidate() {
 /* ----------------------------------------------------------------- legend */
 
 export function renderLegend(container, activeStages) {
-  const active = new Set(activeStages && activeStages.length ? activeStages : STAGES);
+  // An empty selection means none are active, not all of them. Falling back to
+  // "all" here would leave the legend fully lit with an empty map beneath it.
+  const active = new Set(activeStages || STAGES);
   container.innerHTML = `
     <div class="legend__title">Stage of the chain</div>
     ${STAGES.map(
