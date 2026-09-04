@@ -9,7 +9,7 @@
 
 import {
   buildModel, filterFacilities, facetCounts, groupForMap, countriesByFacilityCount,
-  STATUS_VALUES,
+  STATUS_VALUES, MATURITY_VALUES,
 } from './data.js';
 import {
   initMap, renderBasemap, renderCities, renderMarkers, renderLegend, tintCountries, setSelected,
@@ -77,6 +77,7 @@ async function boot() {
     stages: [...STAGES],
     countries: [...new Set(model.facilities.map((f) => f.country))].sort(),
     statuses: [...STATUS_VALUES],
+    maturities: [...MATURITY_VALUES],
   });
 
   initMap({ onCountry: (name) => { S.toggle('countries', name); } });

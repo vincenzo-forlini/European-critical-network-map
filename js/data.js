@@ -9,9 +9,21 @@
 
 import { parseCsv, isTicked, splitList, splitPairs, toNumber, toBool, normaliseKey } from './csv.js';
 
-export const STAGE_VALUES = ['mining', 'processing', 'refining', 'smelting', 'recycling'];
+export const STAGE_VALUES = ['mining', 'processing', 'refining', 'smelting', 'recycling', 'recovery'];
 export const STATUS_VALUES = ['operating', 'construction', 'planned', 'care-and-maintenance', 'closed'];
 export const CONFIDENCE_VALUES = ['high', 'medium', 'low'];
+
+/**
+ * How established a company is. "Incumbent" is the standard term for the
+ * opposite of a startup, and is the default: an unfilled cell means an ordinary
+ * established operator rather than missing data.
+ *
+ * Spin-offs are counted as startups. Nearly every university spin-out in this
+ * sector is also a startup, and forcing a choice between the two labels would
+ * lose more than it gained — the spin-off origin is recorded in the company's
+ * description instead, where it can be read but does not fragment the filter.
+ */
+export const MATURITY_VALUES = ['incumbent', 'scale-up', 'startup'];
 
 /** Columns in facilities.csv that are NOT material tick columns. */
 export const FACILITY_FIXED_COLUMNS = [
@@ -311,12 +323,20 @@ function buildCompanies(csvText, report) {
       report.warn('companies.csv', r._line, `${name} has a website that is not a URL: "${r.website}".`);
     }
 
+    const maturity = normaliseKey(r.maturity) || 'incumbent';
+    if (!MATURITY_VALUES.includes(maturity)) {
+      report.error('companies.csv', r._line, `"${r.maturity}" is not a valid maturity for ${name}.`,
+        `Use one of: ${MATURITY_VALUES.join(', ')}. Leave it blank for an established operator.`);
+      continue;
+    }
+
     const company = {
       key,
       name,
       hq_country: r.hq_country || '',
       website: r.website || '',
       type: r.type || '',
+      maturity,
       news_query: r.news_query || '',
       facilities: [],
       _line: r._line,
@@ -408,6 +428,7 @@ function buildFacilities(csvText, { elementIndex, cityIndex, companyIndex }, rep
         hq_country: '',
         website: '',
         type: '',
+        maturity: 'incumbent',
         news_query: '',
         facilities: [],
         _synthesised: true,
@@ -535,17 +556,19 @@ export function buildModel(sources) {
  * is how facetCounts relaxes one dimension at a time.
  */
 export function filterFacilities(model, filters) {
-  const { elements, stages, countries, statuses, query } = filters;
+  const { elements, stages, countries, statuses, maturities, query } = filters;
   const elementSet = elements instanceof Set ? elements : null;
   const stageSet = stages instanceof Set ? stages : null;
   const countrySet = countries instanceof Set ? countries : null;
   const statusSet = statuses instanceof Set ? statuses : null;
+  const maturitySet = maturities instanceof Set ? maturities : null;
   const q = (query || '').trim().toLowerCase();
 
   return model.facilities.filter((f) => {
     if (stageSet && !stageSet.has(f.stage)) return false;
     if (countrySet && !countrySet.has(f.country)) return false;
     if (statusSet && !statusSet.has(f.status)) return false;
+    if (maturitySet && !maturitySet.has(f.company.maturity)) return false;
     if (elementSet && !f.elements.some((e) => elementSet.has(e))) return false;
     if (q) {
       const hay = `${f.name} ${f.company.name} ${f.city.name} ${f.country}`.toLowerCase();
@@ -608,6 +631,7 @@ export function facetCounts(model, filters) {
     stages: count('stages', (f) => [f.stage]),
     countries: count('countries', (f) => [f.country]),
     statuses: count('statuses', (f) => [f.status]),
+    maturities: count('maturities', (f) => [f.company.maturity]),
   };
 }
 

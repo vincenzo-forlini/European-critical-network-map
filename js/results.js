@@ -8,15 +8,18 @@
 
 import { groupByCompany } from './data.js';
 import { STAGE_LABELS } from './icons.js';
-import { esc, stageChip, statusChip, elementChips, confidenceBadge, empty, plural } from './ui.js';
+import {
+  esc, stageChip, statusChip, elementChips, confidenceBadge, empty, plural, maturityChip,
+} from './ui.js';
 
 export function renderResults(container, model, state, facilities) {
   if (facilities.length === 0) {
     // Name the category that is actually empty, rather than guessing at the cause.
-    const emptied = ['elements', 'stages', 'countries', 'statuses'].filter(
+    const emptied = ['elements', 'stages', 'countries', 'statuses', 'maturities'].filter(
       (f) => state[f].size === 0
     );
-    const labels = { elements: 'material', stages: 'stage', countries: 'country', statuses: 'status' };
+    const labels = { elements: 'material', stages: 'stage', countries: 'country',
+                     statuses: 'status', maturities: 'company type' };
     container.innerHTML = empty(
       'Nothing matches',
       emptied.length
@@ -77,6 +80,7 @@ function renderCompanies(companies, model) {
         return `<button class="rcard" data-act="open-company" data-id="${esc(g.company.key)}">
           <div class="rcard__top">
             <span class="rcard__name">${esc(g.company.name)}</span>
+            ${maturityChip(g.company.maturity)}
             <span class="pill">${plural(g.facilities.length, 'site')}</span>
           </div>
           <div class="rcard__where">${esc(countries.join(', '))}</div>

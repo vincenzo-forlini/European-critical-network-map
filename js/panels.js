@@ -11,6 +11,7 @@ import { productionShares, productionSeries, productionStages, productionYears }
 import { donutChart, lineChart, meter } from './charts.js';
 import {
   esc, stageChip, statusChip, elementChips, confidenceBadge, sourceLink, empty, plural,
+  maturityChip,
 } from './ui.js';
 
 /* ------------------------------------------------------------------- parts */
@@ -116,6 +117,7 @@ export function companyPanel(model, companyKey, news) {
   return `
     <h2>${esc(company.name)}</h2>
     <div class="sub">
+      ${maturityChip(company.maturity)}
       ${company.type ? `<span class="muted">${esc(company.type)}</span>` : ''}
       ${company.hq_country ? `<span class="faint">&middot;</span><span class="muted">HQ ${esc(company.hq_country)}</span>` : ''}
     </div>

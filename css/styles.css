@@ -22,12 +22,21 @@
   --warn: #ffc266;
   --danger: #ff6b6b;
 
-  /* Stage palette — magenta mining and cyan smelting come from the mockup. */
+  /* Stage palette.
+     Magenta mining and cyan smelting come from the design mockup and are fixed.
+     The other four were chosen by maximising the minimum perceptual distance
+     across normal, protanopic, deuteranopic and tritanopic vision. The earlier
+     palette put cyan smelting and violet recycling at a deuteranopic distance of
+     ZERO — literally the same colour to about one man in twelve. This one holds
+     a worst-case distance of 17, with every colour at 5.2:1 contrast or better
+     against the map background. Reordering these is fine; substituting one is
+     not, without re-running that check. */
   --stage-mining: #ff3d86;
-  --stage-processing: #ffab3d;
-  --stage-refining: #38dc90;
+  --stage-processing: #ff824d;
+  --stage-refining: #4b7bff;
   --stage-smelting: #37b6ff;
-  --stage-recycling: #b18cff;
+  --stage-recycling: #a4ea86;
+  --stage-recovery: #ffed4d;
 
   --country-stroke: rgba(255, 255, 255, 0.62);
   --country-fill: rgba(255, 255, 255, 0.015);
@@ -954,4 +963,17 @@ button {
 @media (max-width: 900px) {
   /* The panel is an overlay here, so the handle sits above it when open. */
   .main:not(.sidebar-collapsed) .panel-handle { left: min(360px, 88vw); }
+}
+
+/* Company maturity. Only the new entrants get a chip — incumbents are the norm
+   and badging sixty of them would drown the handful that matter here. */
+.chip--startup {
+  color: #7ef2c8;
+  background: rgba(126, 242, 200, 0.11);
+  border-color: rgba(126, 242, 200, 0.32);
+}
+.chip--scale-up {
+  color: #9ecbff;
+  background: rgba(158, 203, 255, 0.1);
+  border-color: rgba(158, 203, 255, 0.3);
 }

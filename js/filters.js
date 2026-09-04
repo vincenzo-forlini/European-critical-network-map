@@ -7,12 +7,20 @@
  */
 
 import { STAGES, STAGE_LABELS, STAGE_DESCRIPTIONS, stageIcon } from './icons.js';
-import { STATUS_VALUES } from './data.js';
+import { STATUS_VALUES, MATURITY_VALUES } from './data.js';
 import { esc, checkRow } from './ui.js';
+
+/** Plain-language labels for the maturity values. */
+export const MATURITY_LABELS = {
+  incumbent: 'Established (incumbent)',
+  'scale-up': 'Scale-up',
+  startup: 'Start-up or spin-off',
+};
 
 const OPEN = new Map([
   ['elements', true],
   ['stages', true],
+  ['maturities', true],
   ['countries', false],
   ['statuses', false],
 ]);
@@ -108,6 +116,21 @@ export function renderFilters(container, model, state, counts) {
           <span class="check__label">${esc(STAGE_LABELS[s])}</span>
           <span class="check__n">${counts.stages.get(s) || 0}</span>
         </label>`
+      ).join(''),
+    })}
+
+    ${group({
+      facet: 'maturities',
+      title: 'Company type',
+      selectedCount: state.maturities.size,
+      total: MATURITY_VALUES.length,
+      body: MATURITY_VALUES.map((m) =>
+        checkRow({
+          id: m,
+          label: MATURITY_LABELS[m],
+          checked: state.maturities.has(m),
+          count: counts.maturities.get(m) || 0,
+        })
       ).join(''),
     })}
 

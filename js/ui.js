@@ -70,3 +70,13 @@ export function checkRow({ id, label, checked, count, swatch, star, disabled }) 
     ${count === undefined ? '' : `<span class="check__n">${count}</span>`}
   </label>`;
 }
+
+/**
+ * How established a company is. Incumbents get no chip — they are the norm, and
+ * badging 60 of them would drown the handful that are new.
+ */
+export function maturityChip(maturity) {
+  if (!maturity || maturity === 'incumbent') return '';
+  const label = maturity === 'startup' ? 'Start-up' : 'Scale-up';
+  return `<span class="chip chip--${esc(maturity)}">${label}</span>`;
+}

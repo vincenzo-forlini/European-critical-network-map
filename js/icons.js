@@ -8,7 +8,7 @@
  * Colour comes from `fill: currentColor`, so a marker sets the hue in CSS.
  */
 
-export const STAGES = ['mining', 'processing', 'refining', 'smelting', 'recycling'];
+export const STAGES = ['mining', 'processing', 'refining', 'smelting', 'recycling', 'recovery'];
 
 export const STAGE_LABELS = {
   mining: 'Mining',
@@ -16,15 +16,26 @@ export const STAGE_LABELS = {
   refining: 'Refining',
   smelting: 'Smelting',
   recycling: 'Recycling',
+  recovery: 'Recovery',
 };
 
-/** What each stage means, shown in the legend and the opening gate. */
+/**
+ * Shown in the legend and the filter panel.
+ *
+ * Recycling and recovery are kept apart deliberately. Recycling puts a bulk
+ * material back into the same material — copper scrap to copper cathode.
+ * Recovery pulls a critical raw material that is a *minor* constituent out of a
+ * complex stream: neodymium from a magnet, lithium from black mass, silicon from
+ * a solar panel, germanium from a zinc residue. The second is far harder, and in
+ * Europe it is where most of the new companies are.
+ */
 export const STAGE_DESCRIPTIONS = {
   mining: 'Extraction of ore or mineral from the ground',
   processing: 'Crushing, grinding and concentration of ore',
   refining: 'Chemical separation into a purified product',
   smelting: 'Thermal reduction of concentrate into metal',
-  recycling: 'Recovery of material from scrap or end-of-life products',
+  recycling: 'Bulk scrap reprocessed back into the same material',
+  recovery: 'A minor critical raw material extracted from a complex waste stream',
 };
 
 const ICONS = {
@@ -54,6 +65,13 @@ const ICONS = {
     <path d="M2.4 6.9 12.9 3l2.7 7.3-10.5 3.9z"/>
     <path d="M14.6 8.6c2.3 2.4 3.4 5.4 3.6 9h-2.4c-.2-3-1.1-5.4-3-7.4z"/>
     <ellipse cx="17" cy="19.6" rx="4.6" ry="2"/>`,
+
+  // Horseshoe magnet lifting two particles clear of the stream: picking one
+  // valuable material out of a mixture, rather than reprocessing the bulk.
+  recovery: `
+    <path d="M3 19V12a9 9 0 0 1 18 0v7h-6v-7a3 3 0 0 0-6 0v7z"/>
+    <circle cx="6" cy="22.3" r="1.5"/>
+    <circle cx="18" cy="22.3" r="1.5"/>`,
 
   // Three chevrons pinwheeling around the centre.
   recycling: `
