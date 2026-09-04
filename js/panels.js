@@ -11,7 +11,7 @@ import { productionShares, productionSeries, productionStages, productionYears }
 import { donutChart, lineChart, meter } from './charts.js';
 import {
   esc, stageChip, statusChip, elementChips, confidenceBadge, sourceLink, empty, plural,
-  maturityChip,
+  maturityChip, crmaChip,
 } from './ui.js';
 
 /* ------------------------------------------------------------------- parts */
@@ -27,6 +27,7 @@ function facilityCard(f, elementById) {
       &middot; ${esc(f.city.name)}, ${esc(f.country)}
     </div>
     <div class="rcard__meta">
+      ${crmaChip(f, { compact: true })}
       ${stageChip(f.stage)}
       ${elementChips(f.elements, elementById, { max: 3 })}
     </div>
@@ -39,11 +40,14 @@ function facilityDetail(f, elementById) {
       <h4>${esc(f.name)}</h4>
       ${statusChip(f.status)}
     </div>
+    ${f.crmaProject ? `<div class="sub">${crmaChip(f)}</div>` : ''}
     <dl class="kv">
       <dt>Operator</dt>
       <dd><span class="link" data-act="open-company" data-id="${esc(f.companyKey)}">${esc(f.company.name)}</span></dd>
       <dt>Location</dt><dd>${esc(f.city.name)}, ${esc(f.country)}</dd>
       <dt>Stage</dt><dd>${STAGE_LABELS[f.stage]}</dd>
+      ${f.crmaProject ? `<dt>Project</dt><dd>${esc(f.crmaProject)}</dd>` : ''}
+      ${f.crmaStage ? `<dt>CRM Act stage</dt><dd>${esc(f.crmaStage)}</dd>` : ''}
       <dt>Materials</dt><dd>${f.elements.map((id) =>
         `<span class="link" data-act="open-element" data-id="${esc(id)}">${esc(elementById.get(id)?.name || id)}</span>`
       ).join(', ')}</dd>

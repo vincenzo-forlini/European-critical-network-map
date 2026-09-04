@@ -20,7 +20,9 @@ import { renderFilters, toggleGroup } from './filters.js';
 import { renderResults } from './results.js';
 import { cityPanel, companyPanel, elementPanel } from './panels.js';
 import * as S from './state.js';
-import { esc, stageChip, statusChip, elementChips, confidenceBadge, sourceLink } from './ui.js';
+import {
+  esc, stageChip, statusChip, elementChips, confidenceBadge, sourceLink, crmaChip,
+} from './ui.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -200,6 +202,7 @@ function popupHtml(group) {
       first.company.name
     )}</span>
     <div class="pop__meta">
+      ${crmaChip(first)}
       ${stageChip(first.stage)}
       ${statusChip(first.status)}
     </div>
