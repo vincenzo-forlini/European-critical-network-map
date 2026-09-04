@@ -1003,3 +1003,14 @@ button {
   background: var(--surface-3);
   border-color: var(--border-strong);
 }
+
+/* Clicking an SVG path focuses it, and the browser then draws its default focus
+   ring around the path's *bounding box* — a stray rectangle across the map, and
+   for a country like Russia a rectangle half the width of Europe.
+   Countries are hover-only now: they carry a tooltip, are not clickable, and are
+   not in the tab order, so there is no focus state worth indicating. Markers are
+   HTML elements rather than paths, so they keep their focus ring. */
+.leaflet-container path.country:focus,
+.leaflet-container path.leaflet-interactive:focus {
+  outline: none;
+}
